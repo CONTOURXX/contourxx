@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
-<meta name="apple-mobile-web-app-title" content="貨盤檢查">
-<title>貨盤檢查</title>
+<meta name="apple-mobile-web-app-title" content="Contourxx">
+<title>Contourxx</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
 html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
@@ -99,8 +99,8 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 <button id="btn-flip" onclick="flipContour()">⇄</button>
 
 <div id="bottombar">
-  <button class="ptype-btn active" onclick="selectPallet('N118')">N118</button>
-  <button class="ptype-btn"        onclick="selectPallet('P116')">P116</button>
+  <button class="ptype-btn active" onclick="selectPallet('J2')">J2</button>
+  <button class="ptype-btn"        onclick="selectPallet('J1')">J1</button>
   <button class="ptype-btn"        onclick="selectPallet('Q7')">Q7</button>
 </div>
 
@@ -112,16 +112,16 @@ const btnFlip  = document.getElementById('btn-flip');
 const bottombar= document.getElementById('bottombar');
 
 const PALLETS = {
-  N118: { W:244, H:300, H_CORNER:190, W_TOP:120 },
-  Q7:   { W:244, H:300, H_CORNER:244, W_TOP:179 },
-  P116: { W:244, H:295, H_CORNER:130, W_TOP:105 },
+  J2:  { W:244, H:300, H_CORNER:190, W_TOP:120 },
+  J1:  { W:244, H:295, H_CORNER:130, W_TOP:105 },
+  Q7:  { W:244, H:300, H_CORNER:244, W_TOP:179 },
 };
 
-let scale      = 0.50;
+let scale      = 0.42;
 let posX       = 0;
 let posY       = 0;
 let flipped    = true;
-let currentKey = 'N118';
+let currentKey = 'J2';
 
 function getPoly(key, flipped) {
   const p = PALLETS[key];
