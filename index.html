@@ -74,7 +74,55 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 }
 #btn-flip:active { background:rgba(255,255,255,0.15); }
 
-/* ── Flash ── */
+/* ── Overlay toggle button ── */
+#btn-overlay {
+  position:fixed; left:16px;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  z-index:10; display:none;
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; color:#fff;
+  -webkit-appearance:none;
+}
+#btn-overlay.on { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
+#btn-overlay:active { background:rgba(255,255,255,0.15); }
+
+/* ── Frozen frame UI ── */
+#frozen-canvas {
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  z-index:3; display:none;
+}
+#frozen-btns {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+  left:0; right:0;
+  z-index:10; display:none;
+  align-items:center; justify-content:center; gap:20px;
+}
+.frozen-btn {
+  padding:13px 32px; border-radius:50px;
+  font-size:14px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none;
+  transition:background 0.15s;
+}
+#frozen-cancel {
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  color:rgba(255,255,255,0.7);
+}
+#frozen-save {
+  border:1.5px solid rgba(0,229,255,0.5);
+  background:rgba(0,229,255,0.15);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  color:#00e5ff;
+}
+#frozen-cancel:active { background:rgba(255,255,255,0.15); }
+#frozen-save:active   { background:rgba(0,229,255,0.3); }
 #flash { position:fixed; inset:0; z-index:50; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.06s; }
 
 /* ── Photo preview ── */
@@ -128,8 +176,17 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
 </div>
 
+<canvas id="frozen-canvas"></canvas>
+
+<div id="frozen-btns">
+  <button class="frozen-btn" id="frozen-cancel" onclick="cancelFrozen()">取消</button>
+  <button class="frozen-btn" id="frozen-save"   onclick="saveFrozen()">儲存</button>
+</div>
+
 <video id="video" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="canvas"></canvas>
+
+<button id="btn-overlay" onclick="toggleOverlay()">⊡</button>
 
 <div id="pallet-capsule">
   <div id="pallet-scroll"></div>
@@ -147,6 +204,7 @@ const ctx          = canvas.getContext('2d');
 const palletCapsule= document.getElementById('pallet-capsule');
 const shutterRow   = document.getElementById('shutter-row');
 const btnFlip      = document.getElementById('btn-flip');
+const btnOverlay   = document.getElementById('btn-overlay');
 const flash        = document.getElementById('flash');
 const photoPreview = document.getElementById('photo-preview');
 const previewImg   = document.getElementById('preview-img');
@@ -163,8 +221,19 @@ let scale      = 0.42;
 let posX = 0, posY = 0;
 let flipped    = true;
 let currentKey = 'J2';
+let overlayOn  = true;
+
+function toggleOverlay() {
+  overlayOn = !overlayOn;
+  btnOverlay.classList.toggle('on', overlayOn);
+}
+
+const frozenCanvas = document.getElementById('frozen-canvas');
+const frozenBtns   = document.getElementById('frozen-btns');
+const frozenCtx    = frozenCanvas.getContext('2d');
 
 function dpr() { return window.devicePixelRatio || 1; }
+let isFrozen = false;
 
 // ── Pallet selector ──────────────────────────────────────────
 function buildScrollSelector() {
@@ -261,6 +330,8 @@ async function startCamera(){
     palletCapsule.style.display='block';
     shutterRow.style.display   ='flex';
     btnFlip.style.display      ='flex';
+    btnOverlay.style.display   ='flex';
+    btnOverlay.classList.add('on');
     buildScrollSelector();
     loop();
   }).catch(showErr);
@@ -288,6 +359,9 @@ function draw(){
   const W=window.innerWidth, H=window.innerHeight;
   ctx.clearRect(0,0,W,H);
 
+  if (!overlayOn) return;
+
+  // when frozen, video is hidden behind frozen-canvas
   const p=PALLETS[currentKey];
   const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
   const ASPECT=p.W/p.H;
@@ -342,13 +416,63 @@ function lbl(x,y,text,align){
 function capture(){
   flash.style.opacity='1';
   setTimeout(()=>flash.style.opacity='0',120);
-  const W=canvas.width,H=canvas.height;
+
+  if (overlayOn) {
+    // overlay on → direct composite save
+    const W=canvas.width, H=canvas.height;
+    const comp=document.createElement('canvas');
+    comp.width=W; comp.height=H;
+    const c=comp.getContext('2d');
+    c.drawImage(video,0,0,W,H);
+    c.drawImage(canvas,0,0,W,H);
+    previewImg.src=comp.toDataURL('image/jpeg',0.92);
+    photoPreview.style.display='flex';
+  } else {
+    // overlay off → freeze frame, show overlay for adjustment
+    const dr=dpr();
+    frozenCanvas.width =window.innerWidth *dr;
+    frozenCanvas.height=window.innerHeight*dr;
+    frozenCanvas.style.width =window.innerWidth +'px';
+    frozenCanvas.style.height=window.innerHeight+'px';
+    frozenCtx.setTransform(dr,0,0,dr,0,0);
+    frozenCtx.drawImage(video,0,0,window.innerWidth,window.innerHeight);
+
+    isFrozen = true;
+    overlayOn = true;
+    btnOverlay.classList.add('on');
+    frozenCanvas.style.display='block';
+    frozenBtns.style.display  ='flex';
+    // hide shutter/flip/capsule during frozen mode
+    shutterRow.style.display   ='none';
+    btnFlip.style.display      ='none';
+    palletCapsule.style.display='none';
+    btnOverlay.style.display   ='none';
+  }
+}
+
+function cancelFrozen(){
+  isFrozen = false;
+  frozenCanvas.style.display='none';
+  frozenBtns.style.display  ='none';
+  overlayOn = false;
+  btnOverlay.classList.remove('on');
+  shutterRow.style.display   ='flex';
+  btnFlip.style.display      ='flex';
+  palletCapsule.style.display='block';
+  btnOverlay.style.display   ='flex';
+}
+
+function saveFrozen(){
+  // composite frozen frame + overlay
+  const dr=dpr();
+  const W=window.innerWidth*dr, H=window.innerHeight*dr;
   const comp=document.createElement('canvas');
-  comp.width=W;comp.height=H;
+  comp.width=W; comp.height=H;
   const c=comp.getContext('2d');
-  c.drawImage(video,0,0,W,H);
+  c.drawImage(frozenCanvas,0,0,W,H);
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
+  cancelFrozen();
   photoPreview.style.display='flex';
 }
 
