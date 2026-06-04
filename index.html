@@ -228,6 +228,8 @@ let overlayOn  = true;
 function toggleOverlay() {
   overlayOn = !overlayOn;
   btnOverlay.classList.toggle('on', overlayOn);
+  btnFlip.style.opacity = overlayOn ? '1' : '0.3';
+  btnFlip.style.pointerEvents = overlayOn ? 'auto' : 'none';
 }
 
 const frozenCanvas = document.getElementById('frozen-canvas');
@@ -332,6 +334,7 @@ async function startCamera(){
     palletCapsule.style.display='block';
     shutterRow.style.display   ='flex';
     btnFlip.style.display      ='flex';
+    btnFlip.style.opacity      ='1';
     topRight.style.display     ='flex';
     buildScrollSelector();
     loop();
@@ -453,6 +456,8 @@ function cancelFrozen(){
   frozenBtns.style.display  ='none';
   overlayOn = false;
   btnOverlay.classList.remove('on');
+  btnFlip.style.opacity      = '0.3';
+  btnFlip.style.pointerEvents= 'none';
   shutterRow.style.display   ='flex';
   btnFlip.style.display      ='flex';
   palletCapsule.style.display='block';
