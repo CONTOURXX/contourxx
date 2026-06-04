@@ -73,8 +73,41 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 .ptype-btn.active { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
 .ptype-btn:active { transform:scale(0.96); }
 
-/* Calib prompt */
-#calib-prompt {
+/* Flash */
+#flash { position:fixed; inset:0; z-index:50; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.06s; }
+
+/* Photo preview */
+#photo-preview {
+  position:fixed; inset:0; z-index:40;
+  background:rgba(0,0,0,0.85);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:14px;
+}
+#photo-preview img {
+  max-width:92vw; max-height:78vh;
+  border-radius:10px;
+  box-shadow:0 0 40px rgba(0,0,0,0.8);
+}
+#photo-preview p {
+  color:rgba(255,255,255,0.45); font-size:12px;
+}
+
+/* Capture button */
+#btn-capture {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
+  left:50%; transform:translateX(-50%);
+  z-index:10; display:none;
+  width:60px; height:60px; border-radius:50%;
+  background:rgba(255,255,255,0.15);
+  border:3px solid #fff;
+  cursor:pointer; -webkit-appearance:none;
+  align-items:center; justify-content:center;
+}
+#btn-capture::after {
+  content:''; width:44px; height:44px; border-radius:50%; background:#fff;
+}
+#btn-capture:active { transform:translateX(-50%) scale(0.93); }
   position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px);
   left:50%; transform:translateX(-50%);
   z-index:15; display:none;
@@ -134,8 +167,16 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   <button class="btn-main" onclick="location.reload()">重試</button>
 </div>
 
+<div id="flash"></div>
+<div id="photo-preview" onclick="closePreview()">
+  <img id="preview-img" src="" alt="截圖預覽">
+  <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
+</div>
+
 <video id="video" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="canvas"></canvas>
+
+<button id="btn-capture" onclick="capture()"></button>
 
 <div id="calib-prompt"></div>
 
@@ -167,6 +208,10 @@ const calibPrompt = document.getElementById('calib-prompt');
 const calibBar    = document.getElementById('calib-bar');
 const calibInput  = document.getElementById('calib-input');
 const btnCalib    = document.getElementById('btn-calib');
+const btnCapture  = document.getElementById('btn-capture');
+const flash       = document.getElementById('flash');
+const photoPreview= document.getElementById('photo-preview');
+const previewImg  = document.getElementById('preview-img');
 
 const PALLETS = {
   J2: { W:244, H:300, H_CORNER:190, W_TOP:120 },
@@ -204,15 +249,15 @@ function selectPallet(key) {
 
 function flipContour() { flipped = !flipped; }
 
-// snap: if angle within 15° of H or V, snap to it
+// snap: if angle within 5° of H or V, snap to it
 function snapPoint(base, raw) {
   const dx = raw.x - base.x, dy = raw.y - base.y;
   const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
   const len   = Math.hypot(dx, dy);
   // horizontal: angle near 0 or 180
-  if (angle < 15 || angle > 165) return {x: base.x + (dx < 0 ? -len : len), y: base.y};
+  if (angle < 5 || angle > 175) return {x: base.x + (dx < 0 ? -len : len), y: base.y};
   // vertical: angle near 90
-  if (angle > 75 && angle < 105) return {x: base.x, y: base.y + (dy < 0 ? -len : len)};
+  if (angle > 85 && angle < 95) return {x: base.x, y: base.y + (dy < 0 ? -len : len)};
   return raw;
 }
 
@@ -221,8 +266,8 @@ function toggleCalib() {
   if (calibMode !== 'off') { cancelCalib(); return; }
   // place pts at centre by default
   const W = window.innerWidth, H = window.innerHeight;
-  pt1 = {x: W*0.35, y: H*0.5};
-  pt2 = {x: W*0.65, y: H*0.5};
+  pt1 = {x: W*0.5, y: H*0.35};
+  pt2 = {x: W*0.5, y: H*0.65};
   calibMode = 'placing';
   btnCalib.classList.add('on');
   calibPrompt.style.display = 'block';
@@ -331,6 +376,7 @@ async function startCamera() {
     document.getElementById('screen-start').style.display = 'none';
     topRight.style.display  = 'flex';
     bottombar.style.display = 'flex';
+    btnCapture.style.display = 'flex';
     loop();
   }).catch(showErr);
 }
@@ -368,36 +414,46 @@ function draw() {
   const poly = getPoly(currentKey, flipped);
   const pts  = poly.map(([rx,ry]) => [bx+rx*pw, by+ry*ph]);
 
-  // fill
-  ctx.beginPath();
-  pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(0,229,255,0.07)'; ctx.fill();
+  // hide contour during calibration
+  if (calibMode === 'off') {
+    // fill
+    ctx.beginPath();
+    pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0,229,255,0.07)'; ctx.fill();
 
-  // border
-  ctx.beginPath();
-  pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
-  ctx.closePath();
-  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=3;
-  ctx.setLineDash([14,9]); ctx.stroke(); ctx.setLineDash([]);
+    // border
+    ctx.beginPath();
+    pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
+    ctx.closePath();
+    ctx.strokeStyle='#00e5ff'; ctx.lineWidth=3;
+    ctx.setLineDash([14,9]); ctx.stroke(); ctx.setLineDash([]);
 
-  // dots
-  pts.forEach(([x,y]) => {
-    ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2);
-    ctx.fillStyle='#00e5ff'; ctx.fill();
-    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
-  });
+    // dots
+    pts.forEach(([x,y]) => {
+      ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2);
+      ctx.fillStyle='#00e5ff'; ctx.fill();
+      ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    });
 
-  // labels
-  const shortTopY = by + (CUT_H/p.H)*ph;
-  const shortMidY = (shortTopY + by + ph) / 2;
-  const cutSideX  = flipped ? bx-14 : bx+pw+14;
-  const cutAlign  = flipped ? 'right' : 'left';
-  lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
-  lbl(cx, by+ph+18, p.W+' cm', 'center');
-  const topX1 = flipped ? bx+(CUT_W/p.W)*pw : bx;
-  const topX2 = flipped ? bx+pw             : bx+(1-CUT_W/p.W)*pw;
-  lbl((topX1+topX2)/2, by-14, p.W_TOP+' cm', 'center');
+    // labels
+    const shortTopY = by + (CUT_H/p.H)*ph;
+    const shortMidY = (shortTopY + by + ph) / 2;
+    // cut side label (H_CORNER)
+    const cutSideX  = flipped ? bx-14 : bx+pw+14;
+    const cutAlign  = flipped ? 'right' : 'left';
+    lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
+    // straight side label (full height p.H), centred on full height
+    const straightSideX     = flipped ? bx+pw+14 : bx-14;
+    const straightSideAlign = flipped ? 'left' : 'right';
+    lbl(straightSideX, cy, p.H+' cm', straightSideAlign);
+    // bottom width
+    lbl(cx, by+ph+18, p.W+' cm', 'center');
+    // top width
+    const topX1 = flipped ? bx+(CUT_W/p.W)*pw : bx;
+    const topX2 = flipped ? bx+pw             : bx+(1-CUT_W/p.W)*pw;
+    lbl((topX1+topX2)/2, by-14, p.W_TOP+' cm', 'center');
+  }
 
   // calibration overlay
   if (calibMode === 'placing' && pt1 && pt2) drawCalib();
@@ -431,15 +487,28 @@ function drawCalib() {
     ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
   });
 
-  // direction label (H / V)
-  const isH = Math.abs(pt2.y - pt1.y) < 2;
-  const mx = (pt1.x+pt2.x)/2, my = (pt1.y+pt2.y)/2;
-  ctx.save();
-  ctx.font='bold 11px -apple-system,sans-serif';
-  ctx.fillStyle='#ffdd00'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=6;
-  ctx.fillText(isH ? '— 水平' : '| 垂直', mx, my - 18);
-  ctx.restore();
+}
+
+function capture() {
+  // flash effect
+  flash.style.opacity = '1';
+  setTimeout(() => flash.style.opacity = '0', 120);
+
+  // composite video + canvas overlay
+  const W = canvas.width, H = canvas.height;
+  const comp = document.createElement('canvas');
+  comp.width = W; comp.height = H;
+  const c = comp.getContext('2d');
+  c.drawImage(video, 0, 0, W, H);
+  c.drawImage(canvas, 0, 0, W, H);
+
+  // show preview for long-press save
+  previewImg.src = comp.toDataURL('image/jpeg', 0.92);
+  photoPreview.style.display = 'flex';
+}
+
+function closePreview() {
+  photoPreview.style.display = 'none';
 }
 
 function lbl(x,y,text,align) {
