@@ -24,7 +24,7 @@ video {
 /* ── Pallet scroll capsule ── */
 #pallet-capsule {
   position:fixed;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 110px);
+  bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
   left:50%; transform:translateX(-50%);
   z-index:10; display:none;
   background:rgba(0,0,0,0.45);
@@ -32,8 +32,8 @@ video {
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
   overflow:hidden;
-  height:34px;
-  max-width:70vw;
+  height:30px;
+  max-width:40vw;
 }
 #pallet-scroll {
   display:flex; align-items:center;
@@ -41,14 +41,14 @@ video {
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
   height:100%;
-  padding:0 44px;
+  padding:0 32px;
   gap:0;
 }
 #pallet-scroll::-webkit-scrollbar { display:none; }
 
 .pscroll-item {
   scroll-snap-align:center; flex-shrink:0;
-  padding:0 14px; height:34px;
+  padding:0 12px; height:30px;
   display:flex; align-items:center;
   font-size:12px; font-weight:600;
   color:rgba(255,255,255,0.4);
@@ -64,17 +64,17 @@ video {
 #pallet-capsule::after {
   content:'';
   position:absolute; top:50%; transform:translateY(-50%);
-  width:1px; height:14px;
+  width:1px; height:12px;
   background:rgba(255,255,255,0.25);
   pointer-events:none; z-index:3;
 }
-#pallet-capsule::before { left:50%; margin-left:-14px; }
-#pallet-capsule::after  { left:50%; margin-left:14px; }
+#pallet-capsule::before { left:50%; margin-left:-12px; }
+#pallet-capsule::after  { left:50%; margin-left:12px; }
 
 /* ── Shutter row ── */
 #shutter-row {
   position:fixed;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 28px);
+  bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
   left:0; right:0;
   z-index:10; display:none;
   align-items:center; justify-content:center;
@@ -106,14 +106,16 @@ video {
 #btn-calib-confirm:active { transform:scale(0.93); }
 
 #btn-flip {
-  position:absolute; right:calc(50% - 80px); 
-  width:44px; height:44px; border-radius:50%;
-  background:rgba(0,0,0,0.35);
+  position:fixed;
+  right:16px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 25px);
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
   border:1px solid rgba(255,255,255,0.2);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   display:none; align-items:center; justify-content:center;
   cursor:pointer; font-size:18px; color:#fff;
-  -webkit-appearance:none;
+  -webkit-appearance:none; z-index:10;
 }
 #btn-flip:active { background:rgba(255,255,255,0.15); }
 
