@@ -12,7 +12,8 @@
 html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
 
 video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
-#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; }
+#frozen-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; display:none; }
+#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:3; }
 
 /* ── Pallet capsule ── */
 #pallet-capsule {
@@ -91,11 +92,6 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #btn-overlay:active { background:rgba(255,255,255,0.15); }
 
 /* ── Frozen frame UI ── */
-#frozen-canvas {
-  position:fixed; inset:0;
-  width:100%; height:100%;
-  z-index:3; display:none;
-}
 #frozen-btns {
   position:fixed;
   bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
