@@ -457,15 +457,14 @@ function capture(){
 
 function cancelFrozen(){
   isFrozen = false;
-  frozenCanvas.style.display='none';
-  frozenBtns.style.display  ='none';
+  frozenCanvas.style.display ='none';
+  frozenBtns.style.display   ='none';
   overlayOn = false;
   btnOverlay.classList.remove('on');
-  btnFlip.style.opacity      = '0.3';
-  btnFlip.style.pointerEvents= 'none';
+  btnFlip.style.opacity      ='0.3';
+  btnFlip.style.pointerEvents='none';
+  palletCapsule.style.display='none';
   shutterRow.style.display   ='flex';
-  btnFlip.style.display      ='flex';
-  palletCapsule.style.display='block';
 }
 
 function saveFrozen(){
