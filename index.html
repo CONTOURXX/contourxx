@@ -14,6 +14,7 @@ html, body { width:100%; height:100%; background:#000; overflow:hidden; font-fam
 video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
 #canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; }
 
+/* ── Start ── */
 #screen-start {
   position:fixed; inset:0; z-index:20; background:#000;
   display:flex; flex-direction:column;
@@ -28,6 +29,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 }
 .btn-main:active { background:rgba(0,229,255,0.28); }
 
+/* ── Error ── */
 #screen-err {
   position:fixed; inset:0; z-index:20; background:#000;
   display:none; flex-direction:column;
@@ -37,6 +39,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #screen-err h2 { color:#ff5555; font-size:18px; }
 #screen-err p  { color:#888; font-size:13px; line-height:1.7; }
 
+/* ── Top right ── */
 #top-right {
   position:fixed; right:16px;
   top:calc(env(safe-area-inset-top,0px) + 10px);
@@ -55,6 +58,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 .icon-btn:active { background:rgba(0,229,255,0.2); }
 .icon-btn.on { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
 
+/* ── Bottom bar ── */
 #bottombar {
   position:fixed; bottom:0; left:0; right:0;
   z-index:10; display:none;
@@ -73,26 +77,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 .ptype-btn.active { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
 .ptype-btn:active { transform:scale(0.96); }
 
-/* Flash */
-#flash { position:fixed; inset:0; z-index:50; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.06s; }
-
-/* Photo preview */
-#photo-preview {
-  position:fixed; inset:0; z-index:40;
-  background:rgba(0,0,0,0.85);
-  display:none; align-items:center; justify-content:center;
-  flex-direction:column; gap:14px;
-}
-#photo-preview img {
-  max-width:92vw; max-height:78vh;
-  border-radius:10px;
-  box-shadow:0 0 40px rgba(0,0,0,0.8);
-}
-#photo-preview p {
-  color:rgba(255,255,255,0.45); font-size:12px;
-}
-
-/* Capture button */
+/* ── Capture button ── */
 #btn-capture {
   position:fixed;
   bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
@@ -109,10 +94,26 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 }
 #btn-capture:active { transform:translateX(-50%) scale(0.93); }
 
+/* ── Calib confirm button (replaces capture during calib) ── */
+#btn-calib-confirm {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
+  left:50%; transform:translateX(-50%);
+  z-index:10; display:none;
+  width:60px; height:60px; border-radius:50%;
+  background:rgba(255,220,0,0.2);
+  border:3px solid #ffdd00;
+  cursor:pointer; -webkit-appearance:none;
+  align-items:center; justify-content:center;
+  font-size:26px; color:#ffdd00;
+}
+#btn-calib-confirm:active { transform:translateX(-50%) scale(0.93); background:rgba(255,220,0,0.35); }
+
+/* ── Calib prompt ── */
 #calib-prompt {
   position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px);
   left:50%; transform:translateX(-50%);
-  z-index:15; display:none;
+  z-index:10; display:none;
   padding:8px 20px; border-radius:20px;
   background:rgba(0,0,0,0.7);
   border:1px solid rgba(255,220,0,0.5);
@@ -120,66 +121,86 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   white-space:nowrap; pointer-events:none;
 }
 
-/* Calib confirm bar */
-#calib-bar {
-  position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 80px);
-  left:50%; transform:translateX(-50%);
-  z-index:15; display:none;
-  flex-direction:column; gap:12px; align-items:center;
-  background:rgba(10,12,20,0.92);
+/* ── Length input overlay (centred on screen) ── */
+#len-overlay {
+  position:fixed; inset:0; z-index:30;
+  background:rgba(0,0,0,0.6);
+  display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+}
+#len-card {
+  background:rgba(10,12,20,0.95);
   border:1px solid rgba(255,220,0,0.25);
-  border-radius:22px; padding:18px 24px 16px;
-  backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
-  box-shadow:0 8px 40px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,220,0,0.1);
-  min-width:240px;
+  border-radius:24px; padding:28px 28px 22px;
+  display:flex; flex-direction:column; gap:18px; align-items:center;
+  min-width:260px;
+  box-shadow:0 12px 48px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,220,0,0.1);
 }
-#calib-bar-label {
+#len-title {
   color:rgba(255,220,0,0.7); font-size:11px; font-weight:600;
-  letter-spacing:0.08em; text-transform:uppercase;
+  letter-spacing:0.1em; text-transform:uppercase;
 }
-#calib-bar-row {
-  display:flex; gap:10px; align-items:center; width:100%;
+#len-input-wrap {
+  position:relative; width:100%;
 }
-#calib-bar input {
-  flex:1; padding:11px 14px; border-radius:12px;
+#len-input {
+  width:100%; padding:14px 48px 14px 16px;
+  border-radius:14px;
   border:1.5px solid rgba(255,220,0,0.3);
   background:rgba(255,255,255,0.06);
-  color:#fff; font-size:22px; font-weight:700;
-  text-align:center; outline:none; -webkit-appearance:none;
-  letter-spacing:0.04em;
-  transition: border-color 0.15s;
+  color:#fff; font-size:28px; font-weight:700;
+  text-align:left; outline:none; -webkit-appearance:none;
+  letter-spacing:0.02em;
+  transition:border-color 0.15s, background 0.15s;
 }
-#calib-bar input:focus {
+#len-input:focus {
   border-color:#ffdd00;
   background:rgba(255,220,0,0.06);
 }
-#calib-bar input::placeholder { color:rgba(255,255,255,0.2); }
-#calib-unit {
-  color:rgba(255,220,0,0.6); font-size:14px; font-weight:600;
-  margin-left:-4px;
+#len-input::placeholder { color:rgba(255,255,255,0.18); }
+#len-unit {
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  color:rgba(255,220,0,0.55); font-size:14px; font-weight:600;
+  pointer-events:none;
 }
-#calib-bar-btns {
-  display:flex; gap:8px; width:100%;
+#len-btns {
+  display:flex; gap:10px; width:100%;
 }
-#calib-cancel {
-  flex:1; padding:11px; border-radius:12px;
-  border:1px solid rgba(255,255,255,0.1);
-  background:rgba(255,255,255,0.05);
-  color:rgba(255,255,255,0.4); font-size:13px; font-weight:600;
+#len-cancel, #len-ok {
+  flex:1; padding:13px; border-radius:13px;
+  font-size:14px; font-weight:700;
   cursor:pointer; -webkit-appearance:none;
-  transition: background 0.15s;
+  transition:background 0.15s;
 }
-#calib-cancel:active { background:rgba(255,255,255,0.1); }
-#calib-ok {
-  flex:2; padding:11px; border-radius:12px;
+#len-cancel {
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.4);
+}
+#len-cancel:active { background:rgba(255,255,255,0.1); }
+#len-ok {
   border:1.5px solid rgba(255,220,0,0.5);
   background:rgba(255,220,0,0.15);
-  color:#ffdd00; font-size:14px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none;
-  letter-spacing:0.03em;
-  transition: background 0.15s;
+  color:#ffdd00;
 }
-#calib-ok:active { background:rgba(255,220,0,0.28); }
+#len-ok:active { background:rgba(255,220,0,0.28); }
+
+/* ── Flash ── */
+#flash { position:fixed; inset:0; z-index:50; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.06s; }
+
+/* ── Photo preview ── */
+#photo-preview {
+  position:fixed; inset:0; z-index:40;
+  background:rgba(0,0,0,0.85);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:14px;
+}
+#photo-preview img {
+  max-width:92vw; max-height:78vh;
+  border-radius:10px;
+  box-shadow:0 0 40px rgba(0,0,0,0.8);
+}
+#photo-preview p { color:rgba(255,255,255,0.4); font-size:12px; }
 </style>
 </head>
 <body>
@@ -190,21 +211,18 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 </div>
 <div id="screen-err">
   <h2>⚠️ 無法開啟相機</h2>
-  <p>請確認 Safari 已允許相機權限<br>設定 → Safari → 相機 → 允許</p>
   <p id="err-detail" style="color:#555;font-size:12px;"></p>
   <button class="btn-main" onclick="location.reload()">重試</button>
 </div>
 
 <div id="flash"></div>
 <div id="photo-preview" onclick="closePreview()">
-  <img id="preview-img" src="" alt="截圖預覽">
+  <img id="preview-img" src="" alt="">
   <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
 </div>
 
 <video id="video" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="canvas"></canvas>
-
-<button id="btn-capture" onclick="capture()"></button>
 
 <div id="calib-prompt"></div>
 
@@ -219,32 +237,39 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   <button class="ptype-btn"        onclick="selectPallet('Q7')">Q7</button>
 </div>
 
-<div id="calib-bar">
-  <div id="calib-bar-label">輸入線段實際長度</div>
-  <div id="calib-bar-row">
-    <input id="calib-input" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="0" min="1" max="999">
-    <span id="calib-unit">cm</span>
-  </div>
-  <div id="calib-bar-btns">
-    <button id="calib-cancel" onclick="cancelCalib()">取消</button>
-    <button id="calib-ok"     onclick="confirmCalib()">確認</button>
+<button id="btn-capture"       onclick="capture()"></button>
+<button id="btn-calib-confirm" onclick="finishCalibLine()">✓</button>
+
+<!-- Length input overlay -->
+<div id="len-overlay">
+  <div id="len-card">
+    <div id="len-title">輸入線段實際長度</div>
+    <div id="len-input-wrap">
+      <input id="len-input" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="0" min="1" max="9999">
+      <span id="len-unit">cm</span>
+    </div>
+    <div id="len-btns">
+      <button id="len-cancel" onclick="cancelCalib()">取消</button>
+      <button id="len-ok"     onclick="confirmCalib()">確認</button>
+    </div>
   </div>
 </div>
 
 <script>
-const video       = document.getElementById('video');
-const canvas      = document.getElementById('canvas');
-const ctx         = canvas.getContext('2d');
-const topRight    = document.getElementById('top-right');
-const bottombar   = document.getElementById('bottombar');
-const calibPrompt = document.getElementById('calib-prompt');
-const calibBar    = document.getElementById('calib-bar');
-const calibInput  = document.getElementById('calib-input');
-const btnCalib    = document.getElementById('btn-calib');
-const btnCapture  = document.getElementById('btn-capture');
-const flash       = document.getElementById('flash');
-const photoPreview= document.getElementById('photo-preview');
-const previewImg  = document.getElementById('preview-img');
+const video          = document.getElementById('video');
+const canvas         = document.getElementById('canvas');
+const ctx            = canvas.getContext('2d');
+const topRight       = document.getElementById('top-right');
+const bottombar      = document.getElementById('bottombar');
+const calibPrompt    = document.getElementById('calib-prompt');
+const lenOverlay     = document.getElementById('len-overlay');
+const lenInput       = document.getElementById('len-input');
+const btnCalib       = document.getElementById('btn-calib');
+const btnCapture     = document.getElementById('btn-capture');
+const btnCalibConf   = document.getElementById('btn-calib-confirm');
+const flash          = document.getElementById('flash');
+const photoPreview   = document.getElementById('photo-preview');
+const previewImg     = document.getElementById('preview-img');
 
 const PALLETS = {
   J2: { W:244, H:300, H_CORNER:190, W_TOP:120 },
@@ -253,15 +278,14 @@ const PALLETS = {
 };
 
 let scale      = 0.42;
-let posX       = 0, posY = 0;
+let posX = 0, posY = 0;
 let flipped    = true;
 let currentKey = 'J2';
 
-// calib
-// modes: 'off' | 'placing' (both pts draggable) | 'done' (show input bar)
-let calibMode = 'off';
-let pt1 = null, pt2 = null;   // screen coords (CSS px)
-let draggingPt = null;        // 1 or 2
+// calib: 'off' | 'placing' | 'input'
+let calibMode  = 'off';
+let pt1 = null, pt2 = null;
+let draggingPt = null;
 
 function dpr() { return window.devicePixelRatio || 1; }
 
@@ -282,19 +306,17 @@ function selectPallet(key) {
 
 function flipContour() { flipped = !flipped; }
 
-// snap: if angle within 5° of H or V, snap to it
+// snap ±5°
 function snapPoint(base, raw) {
   const dx = raw.x - base.x, dy = raw.y - base.y;
   const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
-  const len   = Math.hypot(dx, dy);
-  // horizontal: angle near 0 or 180
+  const len = Math.hypot(dx, dy);
   if (angle < 5 || angle > 175) return {x: base.x + (dx < 0 ? -len : len), y: base.y};
-  // vertical: angle near 90
   if (angle > 85 && angle < 95) return {x: base.x, y: base.y + (dy < 0 ? -len : len)};
   return raw;
 }
 
-// ── Calibration ─────────────────────────────────────────────
+// ── Calibration ──────────────────────────────────────────────
 function toggleCalib() {
   if (calibMode !== 'off') { cancelCalib(); return; }
   const W = window.innerWidth, H = window.innerHeight;
@@ -304,26 +326,35 @@ function toggleCalib() {
   btnCalib.classList.add('on');
   calibPrompt.style.display = 'block';
   calibPrompt.textContent   = '拖移兩端點對齊已知線段';
-  calibBar.style.display    = 'flex';
   btnCapture.style.display  = 'none';
-  setTimeout(() => calibInput.focus(), 200);
+  btnCalibConf.style.display = 'flex';
+}
+
+function finishCalibLine() {
+  // hide reference line, show input overlay
+  calibMode = 'input';
+  calibPrompt.style.display  = 'none';
+  btnCalibConf.style.display = 'none';
+  lenOverlay.style.display   = 'flex';
+  setTimeout(() => lenInput.focus(), 150);
 }
 
 function cancelCalib() {
   calibMode = 'off'; pt1 = pt2 = null; draggingPt = null;
   btnCalib.classList.remove('on');
-  calibPrompt.style.display = 'none';
-  calibBar.style.display    = 'none';
-  calibInput.value = '';
-  btnCapture.style.display  = 'flex';
+  calibPrompt.style.display  = 'none';
+  btnCalibConf.style.display = 'none';
+  lenOverlay.style.display   = 'none';
+  lenInput.value = '';
+  btnCapture.style.display   = 'flex';
 }
 
 function confirmCalib() {
-  const cm = parseFloat(calibInput.value);
-  if (!cm || cm <= 0) { calibInput.focus(); return; }
+  const cm = parseFloat(lenInput.value);
+  if (!cm || cm <= 0) { lenInput.focus(); return; }
   const pixLen  = Math.hypot(pt2.x - pt1.x, pt2.y - pt1.y);
   const pxPerCm = pixLen / cm;
-  const p       = PALLETS[currentKey];
+  const p = PALLETS[currentKey];
   scale = (p.H * pxPerCm) / window.innerHeight;
   cancelCalib();
 }
@@ -332,8 +363,7 @@ function confirmCalib() {
 let touches  = {};
 let lastDist = null;
 let dragContour = false;
-
-const HIT = 36; // px hit radius for dragging pts
+const HIT = 36;
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
@@ -342,13 +372,11 @@ canvas.addEventListener('touchstart', e => {
   const ids = Object.keys(touches);
 
   if (calibMode === 'placing') {
-    // check if touching a calibration point
     const t0 = touches[ids[0]];
-    if (pt1 && dist2(t0, pt1) < HIT)      { draggingPt = 1; return; }
-    if (pt2 && dist2(t0, pt2) < HIT)      { draggingPt = 2; return; }
+    if (pt1 && dist2(t0, pt1) < HIT) { draggingPt = 1; return; }
+    if (pt2 && dist2(t0, pt2) < HIT) { draggingPt = 2; return; }
     draggingPt = null; return;
   }
-
   draggingPt = null;
   if (ids.length === 2) { lastDist = dist2(touches[ids[0]], touches[ids[1]]); dragContour = false; }
   else { lastDist = null; dragContour = true; }
@@ -363,11 +391,10 @@ canvas.addEventListener('touchmove', e => {
   const ids = Object.keys(touches);
 
   if (calibMode === 'placing' && draggingPt) {
-    const raw = touches[ids[0]];
+    const raw  = touches[ids[0]];
     const base = draggingPt === 1 ? pt2 : pt1;
     const snapped = base ? snapPoint(base, raw) : raw;
-    if (draggingPt === 1) pt1 = snapped;
-    else                  pt2 = snapped;
+    if (draggingPt === 1) pt1 = snapped; else pt2 = snapped;
     return;
   }
 
@@ -391,7 +418,7 @@ canvas.addEventListener('touchend', e => {
   draggingPt = null;
 }, {passive:false});
 
-function dist2(a,b) { return Math.hypot(a.x-b.x, a.y-b.y); }
+function dist2(a, b) { return Math.hypot(a.x-b.x, a.y-b.y); }
 
 // ── Camera ───────────────────────────────────────────────────
 async function startCamera() {
@@ -408,8 +435,8 @@ async function startCamera() {
   video.srcObject = stream;
   video.onloadedmetadata = () => video.play().then(() => {
     document.getElementById('screen-start').style.display = 'none';
-    topRight.style.display  = 'flex';
-    bottombar.style.display = 'flex';
+    topRight.style.display   = 'flex';
+    bottombar.style.display  = 'flex';
     btnCapture.style.display = 'flex';
     loop();
   }).catch(showErr);
@@ -437,33 +464,29 @@ function draw() {
   const W = window.innerWidth, H = window.innerHeight;
   ctx.clearRect(0, 0, W, H);
 
-  const p      = PALLETS[currentKey];
-  const CUT_W  = p.W - p.W_TOP;
-  const CUT_H  = p.H - p.H_CORNER;
-  const ASPECT = p.W / p.H;
-  const ph = H * scale, pw = ph * ASPECT;
-  const cx = W/2 + posX*W, cy = H/2 + posY*H;
-  const bx = cx - pw/2,    by = cy - ph/2;
+  // draw contour only when not in calib placing mode
+  if (calibMode !== 'placing') {
+    const p      = PALLETS[currentKey];
+    const CUT_W  = p.W - p.W_TOP;
+    const CUT_H  = p.H - p.H_CORNER;
+    const ASPECT = p.W / p.H;
+    const ph = H * scale, pw = ph * ASPECT;
+    const cx = W/2 + posX*W, cy = H/2 + posY*H;
+    const bx = cx - pw/2, by = cy - ph/2;
+    const poly = getPoly(currentKey, flipped);
+    const pts  = poly.map(([rx,ry]) => [bx+rx*pw, by+ry*ph]);
 
-  const poly = getPoly(currentKey, flipped);
-  const pts  = poly.map(([rx,ry]) => [bx+rx*pw, by+ry*ph]);
-
-  // hide contour during calibration
-  if (calibMode === 'off') {
-    // fill
     ctx.beginPath();
     pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
     ctx.closePath();
     ctx.fillStyle = 'rgba(0,229,255,0.07)'; ctx.fill();
 
-    // border
     ctx.beginPath();
     pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
     ctx.closePath();
     ctx.strokeStyle='#00e5ff'; ctx.lineWidth=3;
     ctx.setLineDash([14,9]); ctx.stroke(); ctx.setLineDash([]);
 
-    // dots
     pts.forEach(([x,y]) => {
       ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2);
       ctx.fillStyle='#00e5ff'; ctx.fill();
@@ -473,76 +496,47 @@ function draw() {
     // labels
     const shortTopY = by + (CUT_H/p.H)*ph;
     const shortMidY = (shortTopY + by + ph) / 2;
-    // cut side label (H_CORNER)
     const cutSideX  = flipped ? bx-14 : bx+pw+14;
     const cutAlign  = flipped ? 'right' : 'left';
     lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
-    // straight side label (full height p.H), centred on full height
-    const straightSideX     = flipped ? bx+pw+14 : bx-14;
-    const straightSideAlign = flipped ? 'left' : 'right';
-    lbl(straightSideX, cy, p.H+' cm', straightSideAlign);
-    // bottom width
+    const straightX     = flipped ? bx+pw+14 : bx-14;
+    const straightAlign = flipped ? 'left' : 'right';
+    lbl(straightX, cy, p.H+' cm', straightAlign);
     lbl(cx, by+ph+18, p.W+' cm', 'center');
-    // top width
     const topX1 = flipped ? bx+(CUT_W/p.W)*pw : bx;
     const topX2 = flipped ? bx+pw             : bx+(1-CUT_W/p.W)*pw;
     lbl((topX1+topX2)/2, by-14, p.W_TOP+' cm', 'center');
   }
 
-  // calibration overlay
+  // calib reference line
   if (calibMode === 'placing' && pt1 && pt2) drawCalib();
 }
 
 function drawCalib() {
-  const len = Math.hypot(pt2.x-pt1.x, pt2.y-pt1.y).toFixed(0);
-
   // line
   ctx.beginPath(); ctx.moveTo(pt1.x, pt1.y); ctx.lineTo(pt2.x, pt2.y);
   ctx.strokeStyle='#ffdd00'; ctx.lineWidth=2.5;
   ctx.setLineDash([8,5]); ctx.stroke(); ctx.setLineDash([]);
 
   // end ticks
+  const isH = Math.abs(pt2.y - pt1.y) < 2;
   [pt1, pt2].forEach(pt => {
-    const isH = Math.abs(pt2.y - pt1.y) < 2;
     ctx.save(); ctx.translate(pt.x, pt.y);
     ctx.beginPath();
     if (isH) { ctx.moveTo(0,-10); ctx.lineTo(0,10); }
-    else      { ctx.moveTo(-10,0); ctx.lineTo(10,0); }
+    else     { ctx.moveTo(-10,0); ctx.lineTo(10,0); }
     ctx.strokeStyle='#ffdd00'; ctx.lineWidth=2; ctx.stroke();
     ctx.restore();
   });
 
   // draggable dots
   [pt1, pt2].forEach(pt => {
-    ctx.beginPath(); ctx.arc(pt.x, pt.y, 14, 0, Math.PI*2);
-    ctx.fillStyle='rgba(255,220,0,0.2)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, 16, 0, Math.PI*2);
+    ctx.fillStyle='rgba(255,220,0,0.18)'; ctx.fill();
     ctx.beginPath(); ctx.arc(pt.x, pt.y, 8, 0, Math.PI*2);
     ctx.fillStyle='#ffdd00'; ctx.fill();
     ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
   });
-
-}
-
-function capture() {
-  // flash effect
-  flash.style.opacity = '1';
-  setTimeout(() => flash.style.opacity = '0', 120);
-
-  // composite video + canvas overlay
-  const W = canvas.width, H = canvas.height;
-  const comp = document.createElement('canvas');
-  comp.width = W; comp.height = H;
-  const c = comp.getContext('2d');
-  c.drawImage(video, 0, 0, W, H);
-  c.drawImage(canvas, 0, 0, W, H);
-
-  // show preview for long-press save
-  previewImg.src = comp.toDataURL('image/jpeg', 0.92);
-  photoPreview.style.display = 'flex';
-}
-
-function closePreview() {
-  photoPreview.style.display = 'none';
 }
 
 function lbl(x,y,text,align) {
@@ -554,6 +548,22 @@ function lbl(x,y,text,align) {
   ctx.fillText(text,x,y);
   ctx.restore();
 }
+
+// ── Capture ──────────────────────────────────────────────────
+function capture() {
+  flash.style.opacity = '1';
+  setTimeout(() => flash.style.opacity = '0', 120);
+  const W = canvas.width, H = canvas.height;
+  const comp = document.createElement('canvas');
+  comp.width = W; comp.height = H;
+  const c = comp.getContext('2d');
+  c.drawImage(video, 0, 0, W, H);
+  c.drawImage(canvas, 0, 0, W, H);
+  previewImg.src = comp.toDataURL('image/jpeg', 0.92);
+  photoPreview.style.display = 'flex';
+}
+
+function closePreview() { photoPreview.style.display = 'none'; }
 </script>
 </body>
 </html>
