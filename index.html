@@ -12,7 +12,7 @@
 html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
 
 video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
-#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; }
 
 /* Start screen */
 #screen-start {
@@ -21,7 +21,6 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   align-items:center; justify-content:center; gap:24px; padding:32px;
 }
 #screen-start h1 { color:#fff; font-size:22px; font-weight:700; }
-#screen-start p  { color:#666; font-size:14px; text-align:center; line-height:1.6; }
 .btn-main {
   padding:15px 48px; border-radius:50px;
   border:2px solid #00e5ff; background:rgba(0,229,255,0.12);
@@ -40,22 +39,26 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #screen-err h2 { color:#ff5555; font-size:18px; }
 #screen-err p  { color:#888; font-size:13px; line-height:1.7; }
 
-/* Flip button - top right */
-#btn-flip {
+/* Top-right buttons */
+#top-right {
   position:fixed; right:16px;
   top:calc(env(safe-area-inset-top,0px) + 10px);
   z-index:10; display:none;
+  flex-direction:column; gap:8px; align-items:flex-end;
+}
+.icon-btn {
   width:44px; height:44px; border-radius:12px;
   background:rgba(0,0,0,0.55);
   border:1px solid rgba(255,255,255,0.2);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  align-items:center; justify-content:center;
-  cursor:pointer; font-size:22px; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; color:#fff;
   -webkit-appearance:none;
 }
-#btn-flip:active { background:rgba(0,229,255,0.2); }
+.icon-btn:active { background:rgba(0,229,255,0.2); }
+.icon-btn.active-btn { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
 
-/* Bottom bar - pallet selector */
+/* Bottom bar */
 #bottombar {
   position:fixed; bottom:0; left:0; right:0;
   z-index:10; display:none;
@@ -69,14 +72,55 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   background:rgba(0,0,0,0.55);
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   color:rgba(255,255,255,0.5); font-size:14px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none;
-  transition:all 0.15s;
+  cursor:pointer; -webkit-appearance:none; transition:all 0.15s;
 }
-.ptype-btn.active {
-  border-color:#00e5ff; color:#00e5ff;
-  background:rgba(0,229,255,0.15);
-}
+.ptype-btn.active { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
 .ptype-btn:active { transform:scale(0.96); }
+
+/* Calibration prompt */
+#calib-prompt {
+  position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px);
+  left:50%; transform:translateX(-50%);
+  z-index:15; display:none;
+  padding:8px 20px; border-radius:20px;
+  background:rgba(0,0,0,0.7);
+  border:1px solid rgba(0,229,255,0.4);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  color:#00e5ff; font-size:13px; font-weight:600;
+  white-space:nowrap; pointer-events:none;
+}
+
+/* Length input overlay */
+#len-overlay {
+  position:fixed; inset:0; z-index:20;
+  background:rgba(0,0,0,0.6);
+  display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+}
+#len-box {
+  background:#111; border:1px solid rgba(0,229,255,0.4);
+  border-radius:16px; padding:24px 28px;
+  display:flex; flex-direction:column; gap:16px;
+  min-width:220px;
+}
+#len-box p { color:#aaa; font-size:13px; text-align:center; }
+#len-input {
+  padding:12px 16px; border-radius:10px;
+  border:1.5px solid rgba(0,229,255,0.4);
+  background:#000; color:#fff; font-size:20px; font-weight:700;
+  text-align:center; outline:none; width:100%;
+  -webkit-appearance:none;
+}
+#len-input:focus { border-color:#00e5ff; }
+.len-btn-row { display:flex; gap:10px; }
+.len-btn {
+  flex:1; padding:11px; border-radius:10px;
+  font-size:14px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none; border:none;
+}
+#len-cancel { background:rgba(255,255,255,0.08); color:#888; }
+#len-confirm { background:rgba(0,229,255,0.2); color:#00e5ff; border:1.5px solid rgba(0,229,255,0.4); }
+#len-confirm:active { background:rgba(0,229,255,0.35); }
 </style>
 </head>
 <body>
@@ -96,25 +140,49 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 <video id="video" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="canvas"></canvas>
 
-<button id="btn-flip" onclick="flipContour()">⇄</button>
+<!-- Calibration prompt -->
+<div id="calib-prompt"></div>
 
+<!-- Top right buttons -->
+<div id="top-right">
+  <button class="icon-btn" id="btn-calib" onclick="startCalib()" title="校準">⊕</button>
+  <button class="icon-btn" id="btn-flip"  onclick="flipContour()">⇄</button>
+</div>
+
+<!-- Bottom bar -->
 <div id="bottombar">
   <button class="ptype-btn active" onclick="selectPallet('J2')">J2</button>
   <button class="ptype-btn"        onclick="selectPallet('J1')">J1</button>
   <button class="ptype-btn"        onclick="selectPallet('Q7')">Q7</button>
 </div>
 
+<!-- Length input overlay -->
+<div id="len-overlay">
+  <div id="len-box">
+    <p>輸入標記線段的實際長度</p>
+    <input id="len-input" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="cm" min="1" max="999">
+    <div class="len-btn-row">
+      <button class="len-btn" id="len-cancel" onclick="cancelCalib()">取消</button>
+      <button class="len-btn" id="len-confirm" onclick="confirmCalib()">確認</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const video    = document.getElementById('video');
-const canvas   = document.getElementById('canvas');
-const ctx      = canvas.getContext('2d');
-const btnFlip  = document.getElementById('btn-flip');
-const bottombar= document.getElementById('bottombar');
+const video      = document.getElementById('video');
+const canvas     = document.getElementById('canvas');
+const ctx        = canvas.getContext('2d');
+const topRight   = document.getElementById('top-right');
+const bottombar  = document.getElementById('bottombar');
+const calibPrompt= document.getElementById('calib-prompt');
+const lenOverlay = document.getElementById('len-overlay');
+const lenInput   = document.getElementById('len-input');
+const btnCalib   = document.getElementById('btn-calib');
 
 const PALLETS = {
-  J2:  { W:244, H:300, H_CORNER:190, W_TOP:120 },
-  J1:  { W:244, H:295, H_CORNER:130, W_TOP:105 },
-  Q7:  { W:244, H:300, H_CORNER:244, W_TOP:179 },
+  J2: { W:244, H:300, H_CORNER:190, W_TOP:120 },
+  J1: { W:244, H:295, H_CORNER:130, W_TOP:105 },
+  Q7: { W:244, H:300, H_CORNER:244, W_TOP:179 },
 };
 
 let scale      = 0.42;
@@ -123,16 +191,22 @@ let posY       = 0;
 let flipped    = true;
 let currentKey = 'J2';
 
+// Calibration state
+// 0=off, 1=waiting pt1, 2=waiting pt2, 3=waiting input
+let calibState = 0;
+let calibPt1   = null;
+let calibPt2   = null;
+
 function getPoly(key, flipped) {
   const p = PALLETS[key];
   const rCutW = (p.W - p.W_TOP) / p.W;
   const rCutH = (p.H - p.H_CORNER) / p.H;
   const poly = [
-    [0,        1],
-    [1,        1],
-    [1,        rCutH],
-    [1-rCutW,  0],
-    [0,        0],
+    [0,       1],
+    [1,       1],
+    [1,       rCutH],
+    [1-rCutW, 0],
+    [0,       0],
   ];
   if (flipped) return poly.map(([rx,ry]) => [1-rx, ry]);
   return poly;
@@ -147,139 +221,218 @@ function selectPallet(key) {
 
 function flipContour() { flipped = !flipped; }
 
-// Touch gestures
+// ── Calibration ─────────────────────────────────────────────
+function startCalib() {
+  calibState = 1;
+  calibPt1 = calibPt2 = null;
+  btnCalib.classList.add('active-btn');
+  calibPrompt.style.display = 'block';
+  calibPrompt.textContent = '點擊標記第一點';
+}
+
+function cancelCalib() {
+  calibState = 0;
+  calibPt1 = calibPt2 = null;
+  btnCalib.classList.remove('active-btn');
+  calibPrompt.style.display = 'none';
+  lenOverlay.style.display = 'none';
+}
+
+function confirmCalib() {
+  const cm = parseFloat(lenInput.value);
+  if (!cm || cm <= 0) { lenInput.focus(); return; }
+  lenOverlay.style.display = 'none';
+
+  // pixels per cm from the two marked points
+  const pixelLen = Math.hypot(calibPt2.x - calibPt1.x, calibPt2.y - calibPt1.y);
+  const pxPerCm  = pixelLen / cm;
+
+  // set scale so pallet height matches real size
+  const p = PALLETS[currentKey];
+  const palletPx = p.H * pxPerCm;
+  scale = palletPx / canvas.height;
+
+  calibState = 0;
+  calibPt1 = calibPt2 = null;
+  btnCalib.classList.remove('active-btn');
+  calibPrompt.style.display = 'none';
+  lenInput.value = '';
+}
+
+// ── Touch / tap ─────────────────────────────────────────────
 let touches  = {};
 let lastDist = null;
 let dragging = false;
+let tapMoved = false;
 
-canvas.style.pointerEvents = 'auto';
-
-canvas.addEventListener('touchstart', e=>{
+canvas.addEventListener('touchstart', e => {
   e.preventDefault();
-  Array.from(e.changedTouches).forEach(t => touches[t.identifier]={x:t.clientX,y:t.clientY});
+  tapMoved = false;
+  Array.from(e.changedTouches).forEach(t => touches[t.identifier] = {x:t.clientX, y:t.clientY});
   const ids = Object.keys(touches);
-  if(ids.length===2){ lastDist=dist2(touches[ids[0]],touches[ids[1]]); dragging=false; }
-  else { lastDist=null; dragging=true; }
-},{passive:false});
+  if (ids.length === 2) { lastDist = dist2(touches[ids[0]], touches[ids[1]]); dragging = false; }
+  else { lastDist = null; dragging = true; }
+}, {passive:false});
 
-canvas.addEventListener('touchmove', e=>{
+canvas.addEventListener('touchmove', e => {
   e.preventDefault();
-  const prev={};
-  Object.keys(touches).forEach(k=>prev[k]={...touches[k]});
-  Array.from(e.changedTouches).forEach(t => touches[t.identifier]={x:t.clientX,y:t.clientY});
-  const ids=Object.keys(touches);
-  if(ids.length===2){
-    const d=dist2(touches[ids[0]],touches[ids[1]]);
-    if(lastDist){ scale*=d/lastDist; scale=Math.max(0.12,Math.min(1.8,scale)); }
-    lastDist=d; dragging=false;
-  } else if(ids.length===1 && dragging){
-    const id=ids[0];
-    const dx=(touches[id].x-(prev[id]?.x||touches[id].x))/window.innerWidth;
-    const dy=(touches[id].y-(prev[id]?.y||touches[id].y))/window.innerHeight;
-    posX=Math.max(-0.4,Math.min(0.4,posX+dx));
-    posY=Math.max(-0.4,Math.min(0.4,posY+dy));
+  tapMoved = true;
+  const prev = {};
+  Object.keys(touches).forEach(k => prev[k] = {...touches[k]});
+  Array.from(e.changedTouches).forEach(t => touches[t.identifier] = {x:t.clientX, y:t.clientY});
+  const ids = Object.keys(touches);
+
+  if (calibState > 0) return; // no drag during calibration
+
+  if (ids.length === 2) {
+    const d = dist2(touches[ids[0]], touches[ids[1]]);
+    if (lastDist) { scale *= d / lastDist; scale = Math.max(0.12, Math.min(1.8, scale)); }
+    lastDist = d; dragging = false;
+  } else if (ids.length === 1 && dragging) {
+    const id = ids[0];
+    const dx = (touches[id].x - (prev[id]?.x || touches[id].x)) / window.innerWidth;
+    const dy = (touches[id].y - (prev[id]?.y || touches[id].y)) / window.innerHeight;
+    posX = Math.max(-0.4, Math.min(0.4, posX + dx));
+    posY = Math.max(-0.4, Math.min(0.4, posY + dy));
   }
-},{passive:false});
+}, {passive:false});
 
-canvas.addEventListener('touchend', e=>{
-  Array.from(e.changedTouches).forEach(t=>delete touches[t.identifier]);
-  if(Object.keys(touches).length<2) lastDist=null;
-},{passive:false});
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
 
-function dist2(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+  // handle tap for calibration
+  if (!tapMoved && calibState === 1) {
+    calibPt1 = {x: t.clientX * dpr(), y: t.clientY * dpr()};
+    calibState = 2;
+    calibPrompt.textContent = '點擊標記第二點';
+  } else if (!tapMoved && calibState === 2) {
+    calibPt2 = {x: t.clientX * dpr(), y: t.clientY * dpr()};
+    calibState = 3;
+    calibPrompt.style.display = 'none';
+    lenOverlay.style.display = 'flex';
+    setTimeout(() => lenInput.focus(), 100);
+  }
 
-// Camera
-async function startCamera(){
-  const tries=[
+  Array.from(e.changedTouches).forEach(t => delete touches[t.identifier]);
+  if (Object.keys(touches).length < 2) lastDist = null;
+}, {passive:false});
+
+function dist2(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+function dpr() { return window.devicePixelRatio || 1; }
+
+// ── Camera ──────────────────────────────────────────────────
+async function startCamera() {
+  const tries = [
     {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false},
     {video:{facingMode:'environment'},audio:false},
     {video:true,audio:false}
   ];
-  let stream=null;
-  for(const c of tries){
-    try{ stream=await navigator.mediaDevices.getUserMedia(c); break; }
-    catch(e){ if(c===tries[tries.length-1]){ showErr(e); return; } }
+  let stream = null;
+  for (const c of tries) {
+    try { stream = await navigator.mediaDevices.getUserMedia(c); break; }
+    catch(e) { if (c === tries[tries.length-1]) { showErr(e); return; } }
   }
-  video.srcObject=stream;
-  video.onloadedmetadata=()=>video.play().then(()=>{
-    document.getElementById('screen-start').style.display='none';
-    btnFlip.style.display='flex';
-    bottombar.style.display='flex';
+  video.srcObject = stream;
+  video.onloadedmetadata = () => video.play().then(() => {
+    document.getElementById('screen-start').style.display = 'none';
+    topRight.style.display = 'flex';
+    bottombar.style.display = 'flex';
     loop();
   }).catch(showErr);
 }
 
-function showErr(e){
-  document.getElementById('screen-start').style.display='none';
-  document.getElementById('screen-err').style.display='flex';
-  document.getElementById('err-detail').textContent=(e?.name||'')+': '+(e?.message||'');
+function showErr(e) {
+  document.getElementById('screen-start').style.display = 'none';
+  document.getElementById('screen-err').style.display = 'flex';
+  document.getElementById('err-detail').textContent = (e?.name||'') + ': ' + (e?.message||'');
 }
 
-// Draw
-function loop(){
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
+// ── Draw ────────────────────────────────────────────────────
+function loop() {
+  const dr = dpr();
+  canvas.width  = window.innerWidth  * dr;
+  canvas.height = window.innerHeight * dr;
+  canvas.style.width  = window.innerWidth  + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+  ctx.setTransform(dr, 0, 0, dr, 0, 0);
   draw();
   requestAnimationFrame(loop);
 }
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const W=canvas.width, H=canvas.height;
-  const p=PALLETS[currentKey];
-  const CUT_W=p.W-p.W_TOP;
-  const CUT_H=p.H-p.H_CORNER;
-  const ASPECT=p.W/p.H;
+function draw() {
+  const W = window.innerWidth, H = window.innerHeight;
+  ctx.clearRect(0, 0, W, H);
+  const p = PALLETS[currentKey];
+  const CUT_W = p.W - p.W_TOP;
+  const CUT_H = p.H - p.H_CORNER;
+  const ASPECT = p.W / p.H;
 
-  const ph=H*scale;
-  const pw=ph*ASPECT;
-  const cx=W/2+posX*W;
-  const cy=H/2+posY*H;
-  const bx=cx-pw/2, by=cy-ph/2;
+  const ph = H * scale;
+  const pw = ph * ASPECT;
+  const cx = W/2 + posX*W;
+  const cy = H/2 + posY*H;
+  const bx = cx - pw/2, by = cy - ph/2;
 
-  const poly=getPoly(currentKey, flipped);
-  const pts=poly.map(([rx,ry])=>[bx+rx*pw, by+ry*ph]);
+  const poly = getPoly(currentKey, flipped);
+  const pts  = poly.map(([rx,ry]) => [bx + rx*pw, by + ry*ph]);
 
   // fill
   ctx.beginPath();
-  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
   ctx.closePath();
-  ctx.fillStyle='rgba(0,229,255,0.07)'; ctx.fill();
+  ctx.fillStyle = 'rgba(0,229,255,0.07)'; ctx.fill();
 
   // dashed border
   ctx.beginPath();
-  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  pts.forEach(([x,y],i) => i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y));
   ctx.closePath();
-  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=3;
+  ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 3;
   ctx.setLineDash([14,9]); ctx.stroke(); ctx.setLineDash([]);
 
   // corner dots
-  pts.forEach(([x,y])=>{
+  pts.forEach(([x,y]) => {
     ctx.beginPath(); ctx.arc(x,y,6,0,Math.PI*2);
     ctx.fillStyle='#00e5ff'; ctx.fill();
     ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
   });
 
-  // H_CORNER label: on the cut side, midpoint of short vertical edge
-  // short vertical edge: from bottom of cut-side to where slant begins
-  const shortTopY = by + (CUT_H/p.H)*ph;  // y where slant starts (top)
-  const shortBotY = by + ph;               // y at bottom
-  const shortMidY = (shortTopY + shortBotY) / 2;
-  // cut side: flipped=true → cut on left (bx), flipped=false → cut on right (bx+pw)
-  const cutSideX   = flipped ? bx-14    : bx+pw+14;
-  const cutSideAlign = flipped ? 'right' : 'left';
-  lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutSideAlign);
-
-  // W label: bottom centre
+  // labels
+  const shortTopY = by + (CUT_H/p.H)*ph;
+  const shortMidY = (shortTopY + by + ph) / 2;
+  const cutSideX  = flipped ? bx-14 : bx+pw+14;
+  const cutAlign  = flipped ? 'right' : 'left';
+  lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
   lbl(cx, by+ph+18, p.W+' cm', 'center');
-
-  // W_TOP label: centre of top edge
   const topX1 = flipped ? bx+(CUT_W/p.W)*pw : bx;
   const topX2 = flipped ? bx+pw             : bx+(1-CUT_W/p.W)*pw;
   lbl((topX1+topX2)/2, by-14, p.W_TOP+' cm', 'center');
+
+  // calibration overlay
+  if (calibState >= 1 && calibPt1) drawCalibLine();
 }
 
-function lbl(x,y,text,align){
+function drawCalibLine() {
+  const dr = dpr();
+  const p1 = {x: calibPt1.x/dr, y: calibPt1.y/dr};
+
+  // dot at pt1
+  ctx.beginPath(); ctx.arc(p1.x, p1.y, 8, 0, Math.PI*2);
+  ctx.fillStyle='#ffdd00'; ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+
+  if (calibPt2) {
+    const p2 = {x: calibPt2.x/dr, y: calibPt2.y/dr};
+    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y);
+    ctx.strokeStyle='#ffdd00'; ctx.lineWidth=2;
+    ctx.setLineDash([8,5]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(p2.x, p2.y, 8, 0, Math.PI*2);
+    ctx.fillStyle='#ffdd00'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+  }
+}
+
+function lbl(x,y,text,align) {
   ctx.save();
   ctx.font='bold 13px -apple-system,sans-serif';
   ctx.fillStyle='rgba(255,255,255,0.8)';
