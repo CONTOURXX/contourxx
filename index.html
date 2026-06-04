@@ -293,102 +293,27 @@ let draggingPt = null;
 
 function dpr() { return window.devicePixelRatio || 1; }
 
-// ── Pallet scroll (infinite loop, horizontal only) ───────────
-const REPEAT = 5; // repeat items this many times for infinite illusion
-let isScrollJumping = false;
-
+// ── Pallet selector (click only) ─────────────────────────────
 function buildScrollSelector() {
   palletScroll.innerHTML = '';
-  // fill with REPEAT copies
-  for (let r = 0; r < REPEAT; r++) {
-    PALLET_KEYS.forEach(key => {
-      const el = document.createElement('div');
-      el.className = 'pscroll-item';
-      el.textContent = key;
-      el.dataset.key = key;
-      palletScroll.appendChild(el);
-    });
-  }
-  updateActiveItems();
-  // start scrolled to middle copy
-  setTimeout(() => jumpToMiddle(false), 50);
-}
-
-function updateActiveItems() {
-  palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
-    el.classList.toggle('active', el.dataset.key === currentKey));
-}
-
-function jumpToMiddle(smooth) {
-  // find the middle-copy item matching currentKey
-  const all  = Array.from(palletScroll.querySelectorAll('.pscroll-item'));
-  const mid  = Math.floor(REPEAT / 2); // middle repeat index
-  const idx  = mid * PALLET_KEYS.length + PALLET_KEYS.indexOf(currentKey);
-  const item = all[idx];
-  if (!item) return;
-  const wrapW  = palletCapsule.offsetWidth;
-  const target = item.offsetLeft + item.offsetWidth / 2 - wrapW / 2;
-  isScrollJumping = true;
-  palletScroll.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'instant' });
-  setTimeout(() => isScrollJumping = false, 50);
+  PALLET_KEYS.forEach(key => {
+    const el = document.createElement('div');
+    el.className = 'pscroll-item' + (key === currentKey ? ' active' : '');
+    el.textContent = key;
+    el.dataset.key = key;
+    palletScroll.appendChild(el);
+  });
 }
 
 function selectPallet(key) {
   currentKey = key;
-  updateActiveItems();
+  palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.key === key));
 }
-
-// horizontal-only touch handling for capsule
-let capTouchStartX = 0, capTouchStartY = 0, capIsH = null;
-palletScroll.addEventListener('touchstart', e => {
-  capTouchStartX = e.touches[0].clientX;
-  capTouchStartY = e.touches[0].clientY;
-  capIsH = null;
-}, {passive:true});
-
-palletScroll.addEventListener('touchmove', e => {
-  if (capIsH === null) {
-    const dx = Math.abs(e.touches[0].clientX - capTouchStartX);
-    const dy = Math.abs(e.touches[0].clientY - capTouchStartY);
-    if (dx > 4 || dy > 4) capIsH = dx >= dy;
-  }
-  if (capIsH === false) e.preventDefault(); // block vertical
-}, {passive:false});
-
-// snap + infinite loop on scroll end
-let scrollTimer = null;
-palletScroll.addEventListener('scroll', () => {
-  if (isScrollJumping) return;
-  clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => {
-    const wrapW  = palletCapsule.offsetWidth;
-    const centre = palletScroll.scrollLeft + wrapW / 2;
-    // find nearest item
-    let best = null, bestDist = Infinity;
-    palletScroll.querySelectorAll('.pscroll-item').forEach(el => {
-      const cx = el.offsetLeft + el.offsetWidth / 2;
-      const d  = Math.abs(cx - centre);
-      if (d < bestDist) { bestDist = d; best = el; }
-    });
-    if (!best) return;
-    selectPallet(best.dataset.key);
-    // check if we're near the edges → jump to middle silently
-    const total     = palletScroll.scrollWidth;
-    const visible   = palletCapsule.offsetWidth;
-    const scrollMax = total - visible;
-    const pos       = palletScroll.scrollLeft;
-    const edgeZone  = total / REPEAT;
-    if (pos < edgeZone || pos > scrollMax - edgeZone) {
-      jumpToMiddle(false);
-    }
-  }, 120);
-});
 
 palletScroll.addEventListener('click', e => {
   const item = e.target.closest('.pscroll-item');
-  if (!item) return;
-  selectPallet(item.dataset.key);
-  jumpToMiddle(true);
+  if (item) selectPallet(item.dataset.key);
 });
 
 // ── Pallet shape ─────────────────────────────────────────────
