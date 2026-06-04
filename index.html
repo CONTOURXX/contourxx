@@ -11,17 +11,10 @@
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
 html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
 
-/* ── Full screen camera ── */
-video {
-  position:fixed; inset:0;
-  width:100%; height:100%; object-fit:cover; z-index:1;
-}
-#canvas {
-  position:fixed; inset:0;
-  width:100%; height:100%; z-index:2;
-}
+video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; }
 
-/* ── Pallet scroll capsule ── */
+/* ── Pallet capsule ── */
 #pallet-capsule {
   position:fixed;
   bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
@@ -31,27 +24,19 @@ video {
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
-  height:30px;
-  padding:0 6px;
+  height:30px; padding:0 6px;
 }
-#pallet-scroll {
-  display:flex; align-items:center;
-  height:100%; gap:0;
-}
+#pallet-scroll { display:flex; align-items:center; height:100%; }
 
 .pscroll-item {
-  flex-shrink:0;
-  padding:0 14px; height:30px;
+  flex-shrink:0; padding:0 14px; height:30px;
   display:flex; align-items:center;
   font-size:12px; font-weight:600;
   color:rgba(255,255,255,0.4);
   cursor:pointer; white-space:nowrap;
-  transition:all 0.2s;
-  border-radius:50px;
+  transition:all 0.2s; border-radius:50px;
 }
-.pscroll-item.active {
-  color:#fff; font-size:14px; font-weight:700;
-}
+.pscroll-item.active { color:#fff; font-size:14px; font-weight:700; }
 
 /* ── Shutter row ── */
 #shutter-row {
@@ -67,8 +52,7 @@ video {
   background:transparent; border:3px solid #fff;
   cursor:pointer; -webkit-appearance:none;
   display:flex; align-items:center; justify-content:center;
-  position:relative; transition:transform 0.1s;
-  flex-shrink:0;
+  position:relative; transition:transform 0.1s; flex-shrink:0;
 }
 #btn-capture::after {
   content:''; width:52px; height:52px; border-radius:50%; background:#fff;
@@ -77,19 +61,8 @@ video {
 #btn-capture:active { transform:scale(0.93); }
 #btn-capture:active::after { transform:scale(0.88); }
 
-#btn-calib-confirm {
-  width:62px; height:62px; border-radius:50%;
-  background:rgba(255,220,0,0.15); border:3px solid #ffdd00;
-  cursor:pointer; -webkit-appearance:none;
-  display:none; align-items:center; justify-content:center;
-  font-size:28px; color:#ffdd00; transition:transform 0.1s;
-  flex-shrink:0;
-}
-#btn-calib-confirm:active { transform:scale(0.93); }
-
 #btn-flip {
-  position:fixed;
-  right:16px;
+  position:fixed; right:16px;
   bottom:calc(env(safe-area-inset-bottom,0px) + 25px);
   width:44px; height:44px; border-radius:12px;
   background:rgba(0,0,0,0.5);
@@ -100,77 +73,6 @@ video {
   -webkit-appearance:none; z-index:10;
 }
 #btn-flip:active { background:rgba(255,255,255,0.15); }
-
-/* ── Top right ── */
-#top-right {
-  position:fixed; right:16px;
-  top:calc(env(safe-area-inset-top,0px) + 10px);
-  z-index:10; display:none;
-  flex-direction:column; gap:8px;
-}
-.icon-btn {
-  width:44px; height:44px; border-radius:12px;
-  background:rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.2);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  display:flex; align-items:center; justify-content:center;
-  cursor:pointer; font-size:18px; color:#fff;
-  -webkit-appearance:none;
-}
-.icon-btn:active { background:rgba(0,229,255,0.2); }
-.icon-btn.on { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
-
-/* ── Calib prompt ── */
-#calib-prompt {
-  position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px);
-  left:50%; transform:translateX(-50%);
-  z-index:10; display:none;
-  padding:8px 20px; border-radius:20px;
-  background:rgba(0,0,0,0.7);
-  border:1px solid rgba(255,220,0,0.5);
-  color:#ffdd00; font-size:13px; font-weight:600;
-  white-space:nowrap; pointer-events:none;
-}
-
-/* ── Length input overlay ── */
-#len-overlay {
-  position:fixed; inset:0; z-index:30;
-  background:rgba(0,0,0,0.55);
-  display:none; align-items:center; justify-content:center;
-  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-}
-#len-card {
-  background:rgba(10,12,20,0.95);
-  border:1px solid rgba(255,220,0,0.25);
-  border-radius:24px; padding:28px 28px 22px;
-  display:flex; flex-direction:column; gap:18px; align-items:center;
-  min-width:260px;
-  box-shadow:0 12px 48px rgba(0,0,0,0.7);
-}
-#len-title { color:rgba(255,220,0,0.7); font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
-#len-input-wrap { position:relative; width:100%; }
-#len-input {
-  width:100%; padding:14px 48px 14px 16px;
-  border-radius:14px;
-  border:1.5px solid rgba(255,220,0,0.3);
-  background:rgba(255,255,255,0.06);
-  color:#fff; font-size:28px; font-weight:700;
-  text-align:center; outline:none; -webkit-appearance:none;
-  transition:border-color 0.15s, background 0.15s;
-}
-#len-input:focus { border-color:#ffdd00; background:rgba(255,220,0,0.06); }
-#len-input::placeholder { color:rgba(255,255,255,0.18); }
-#len-unit { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:rgba(255,220,0,0.55); font-size:14px; font-weight:600; pointer-events:none; }
-#len-btns { display:flex; gap:10px; width:100%; }
-#len-cancel, #len-ok {
-  flex:1; padding:13px; border-radius:13px;
-  font-size:14px; font-weight:700;
-  cursor:pointer; -webkit-appearance:none; transition:background 0.15s;
-}
-#len-cancel { border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); }
-#len-cancel:active { background:rgba(255,255,255,0.1); }
-#len-ok { border:1.5px solid rgba(255,220,0,0.5); background:rgba(255,220,0,0.15); color:#ffdd00; }
-#len-ok:active { background:rgba(255,220,0,0.28); }
 
 /* ── Flash ── */
 #flash { position:fixed; inset:0; z-index:50; background:#fff; opacity:0; pointer-events:none; transition:opacity 0.06s; }
@@ -225,51 +127,25 @@ video {
   <img id="preview-img" src="" alt="">
   <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
 </div>
-<div id="len-overlay">
-  <div id="len-card">
-    <div id="len-title">輸入線段實際長度</div>
-    <div id="len-input-wrap">
-      <input id="len-input" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="0" min="1" max="9999">
-      <span id="len-unit">cm</span>
-    </div>
-    <div id="len-btns">
-      <button id="len-cancel" onclick="cancelCalib()">取消</button>
-      <button id="len-ok"     onclick="confirmCalib()">確認</button>
-    </div>
-  </div>
-</div>
 
 <video id="video" autoplay playsinline muted webkit-playsinline></video>
 <canvas id="canvas"></canvas>
-<div id="calib-prompt"></div>
-
-<div id="top-right">
-  <button class="icon-btn" id="btn-calib" onclick="toggleCalib()">⊕</button>
-</div>
 
 <div id="pallet-capsule">
   <div id="pallet-scroll"></div>
 </div>
 
 <div id="shutter-row">
-  <button id="btn-capture"       onclick="capture()"></button>
-  <button id="btn-calib-confirm" onclick="finishCalibLine()">✓</button>
-  <button id="btn-flip"          onclick="flipContour()">⇄</button>
+  <button id="btn-capture" onclick="capture()"></button>
+  <button id="btn-flip"    onclick="flipContour()">⇄</button>
 </div>
 
 <script>
 const video        = document.getElementById('video');
 const canvas       = document.getElementById('canvas');
 const ctx          = canvas.getContext('2d');
-const topRight     = document.getElementById('top-right');
 const palletCapsule= document.getElementById('pallet-capsule');
 const shutterRow   = document.getElementById('shutter-row');
-const calibPrompt  = document.getElementById('calib-prompt');
-const lenOverlay   = document.getElementById('len-overlay');
-const lenInput     = document.getElementById('len-input');
-const btnCalib     = document.getElementById('btn-calib');
-const btnCapture   = document.getElementById('btn-capture');
-const btnCalibConf = document.getElementById('btn-calib-confirm');
 const btnFlip      = document.getElementById('btn-flip');
 const flash        = document.getElementById('flash');
 const photoPreview = document.getElementById('photo-preview');
@@ -287,13 +163,10 @@ let scale      = 0.42;
 let posX = 0, posY = 0;
 let flipped    = true;
 let currentKey = 'J2';
-let calibMode  = 'off';
-let pt1 = null, pt2 = null;
-let draggingPt = null;
 
 function dpr() { return window.devicePixelRatio || 1; }
 
-// ── Pallet selector (click only) ─────────────────────────────
+// ── Pallet selector ──────────────────────────────────────────
 function buildScrollSelector() {
   palletScroll.innerHTML = '';
   PALLET_KEYS.forEach(key => {
@@ -328,76 +201,16 @@ function getPoly(key, flipped) {
 
 function flipContour() { flipped = !flipped; }
 
-function snapPoint(base, raw) {
-  const dx = raw.x - base.x, dy = raw.y - base.y;
-  const angle = Math.abs(Math.atan2(dy, dx) * 180 / Math.PI);
-  const len = Math.hypot(dx, dy);
-  if (angle < 5 || angle > 175) return {x: base.x+(dx<0?-len:len), y: base.y};
-  if (angle > 85 && angle < 95) return {x: base.x, y: base.y+(dy<0?-len:len)};
-  return raw;
-}
-
-// ── Calibration ──────────────────────────────────────────────
-function toggleCalib() {
-  if (calibMode !== 'off') { cancelCalib(); return; }
-  const W = window.innerWidth, H = window.innerHeight;
-  pt1 = {x: W*0.5, y: H*0.35};
-  pt2 = {x: W*0.5, y: H*0.65};
-  calibMode = 'placing';
-  btnCalib.classList.add('on');
-  calibPrompt.style.display  = 'block';
-  calibPrompt.textContent    = '拖移兩端點對齊已知線段';
-  btnCapture.style.display   = 'none';
-  btnCalibConf.style.display = 'flex';
-  palletCapsule.style.display= 'none';
-}
-
-function finishCalibLine() {
-  calibMode = 'input';
-  calibPrompt.style.display  = 'none';
-  btnCalibConf.style.display = 'none';
-  lenOverlay.style.display   = 'flex';
-  setTimeout(() => lenInput.focus(), 150);
-}
-
-function cancelCalib() {
-  calibMode = 'off'; pt1 = pt2 = null; draggingPt = null;
-  btnCalib.classList.remove('on');
-  calibPrompt.style.display  = 'none';
-  btnCalibConf.style.display = 'none';
-  lenOverlay.style.display   = 'none';
-  lenInput.value = '';
-  btnCapture.style.display   = 'flex';
-  palletCapsule.style.display= 'block';
-}
-
-function confirmCalib() {
-  const cm = parseFloat(lenInput.value);
-  if (!cm || cm <= 0) { lenInput.focus(); return; }
-  const pixLen  = Math.hypot(pt2.x - pt1.x, pt2.y - pt1.y);
-  const pxPerCm = pixLen / cm;
-  scale = (PALLETS[currentKey].H * pxPerCm) / window.innerHeight;
-  cancelCalib();
-}
-
 // ── Touch ────────────────────────────────────────────────────
 let touches  = {};
 let lastDist = null;
 let dragContour = false;
-const HIT = 36;
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
   Array.from(e.changedTouches).forEach(t =>
     touches[t.identifier] = {x:t.clientX, y:t.clientY});
   const ids = Object.keys(touches);
-  if (calibMode === 'placing') {
-    const t0 = touches[ids[0]];
-    if (pt1 && dist2(t0,pt1)<HIT) { draggingPt=1; return; }
-    if (pt2 && dist2(t0,pt2)<HIT) { draggingPt=2; return; }
-    draggingPt=null; return;
-  }
-  draggingPt=null;
   if (ids.length===2) { lastDist=dist2(touches[ids[0]],touches[ids[1]]); dragContour=false; }
   else { lastDist=null; dragContour=true; }
 },{passive:false});
@@ -409,17 +222,10 @@ canvas.addEventListener('touchmove', e => {
   Array.from(e.changedTouches).forEach(t=>
     touches[t.identifier]={x:t.clientX,y:t.clientY});
   const ids=Object.keys(touches);
-  if (calibMode==='placing' && draggingPt) {
-    const raw=touches[ids[0]];
-    const base=draggingPt===1?pt2:pt1;
-    const snapped=base?snapPoint(base,raw):raw;
-    if(draggingPt===1)pt1=snapped;else pt2=snapped;
-    return;
-  }
   if (ids.length===2) {
     const d=dist2(touches[ids[0]],touches[ids[1]]);
     if(lastDist){scale*=d/lastDist;scale=Math.max(0.12,Math.min(1.8,scale));}
-    lastDist=d;dragContour=false;
+    lastDist=d; dragContour=false;
   } else if(ids.length===1&&dragContour){
     const id=ids[0];
     const dx=(touches[id].x-(prev[id]?.x||touches[id].x))/window.innerWidth;
@@ -433,7 +239,6 @@ canvas.addEventListener('touchend', e=>{
   e.preventDefault();
   Array.from(e.changedTouches).forEach(t=>delete touches[t.identifier]);
   if(Object.keys(touches).length<2)lastDist=null;
-  draggingPt=null;
 },{passive:false});
 
 function dist2(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
@@ -453,7 +258,6 @@ async function startCamera(){
   video.srcObject=stream;
   video.onloadedmetadata=()=>video.play().then(()=>{
     document.getElementById('screen-start').style.display='none';
-    topRight.style.display     ='flex';
     palletCapsule.style.display='block';
     shutterRow.style.display   ='flex';
     btnFlip.style.display      ='flex';
@@ -484,67 +288,44 @@ function draw(){
   const W=window.innerWidth, H=window.innerHeight;
   ctx.clearRect(0,0,W,H);
 
-  if(calibMode!=='placing'){
-    const p=PALLETS[currentKey];
-    const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
-    const ASPECT=p.W/p.H;
-    const ph=H*scale, pw=ph*ASPECT;
-    const cx=W/2+posX*W, cy=H/2+posY*H;
-    const bx=cx-pw/2, by=cy-ph/2;
-    const poly=getPoly(currentKey,flipped);
-    const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
+  const p=PALLETS[currentKey];
+  const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
+  const ASPECT=p.W/p.H;
+  const ph=H*scale, pw=ph*ASPECT;
+  const cx=W/2+posX*W, cy=H/2+posY*H;
+  const bx=cx-pw/2, by=cy-ph/2;
+  const poly=getPoly(currentKey,flipped);
+  const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
 
-    ctx.beginPath();
-    pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
-    ctx.closePath();
-    ctx.fillStyle='rgba(0,229,255,0.07)';ctx.fill();
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  ctx.closePath();
+  ctx.fillStyle='rgba(0,229,255,0.07)';ctx.fill();
 
-    ctx.beginPath();
-    pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
-    ctx.closePath();
-    ctx.strokeStyle='#00e5ff';ctx.lineWidth=3;
-    ctx.setLineDash([14,9]);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  ctx.closePath();
+  ctx.strokeStyle='#00e5ff';ctx.lineWidth=3;
+  ctx.setLineDash([14,9]);ctx.stroke();ctx.setLineDash([]);
 
-    pts.forEach(([x,y])=>{
-      ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
-      ctx.fillStyle='#00e5ff';ctx.fill();
-      ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
-    });
-
-    const shortTopY=by+(CUT_H/p.H)*ph;
-    const shortMidY=(shortTopY+by+ph)/2;
-    const cutSideX=flipped?bx-14:bx+pw+14;
-    const cutAlign=flipped?'right':'left';
-    lbl(cutSideX,shortMidY,p.H_CORNER+' cm',cutAlign);
-    const straightX=flipped?bx+pw+14:bx-14;
-    const straightAlign=flipped?'left':'right';
-    lbl(straightX,cy,p.H+' cm',straightAlign);
-    lbl(cx,by+ph+18,p.W+' cm','center');
-    const topX1=flipped?bx+(CUT_W/p.W)*pw:bx;
-    const topX2=flipped?bx+pw:bx+(1-CUT_W/p.W)*pw;
-    lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
-  }
-
-  if(calibMode==='placing'&&pt1&&pt2)drawCalib();
-}
-
-function drawCalib(){
-  ctx.beginPath();ctx.moveTo(pt1.x,pt1.y);ctx.lineTo(pt2.x,pt2.y);
-  ctx.strokeStyle='#ffdd00';ctx.lineWidth=2.5;
-  ctx.setLineDash([8,5]);ctx.stroke();ctx.setLineDash([]);
-  const isH=Math.abs(pt2.y-pt1.y)<2;
-  [pt1,pt2].forEach(pt=>{
-    ctx.save();ctx.translate(pt.x,pt.y);
-    ctx.beginPath();
-    if(isH){ctx.moveTo(0,-10);ctx.lineTo(0,10);}
-    else{ctx.moveTo(-10,0);ctx.lineTo(10,0);}
-    ctx.strokeStyle='#ffdd00';ctx.lineWidth=2;ctx.stroke();ctx.restore();
-    ctx.beginPath();ctx.arc(pt.x,pt.y,16,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,220,0,0.18)';ctx.fill();
-    ctx.beginPath();ctx.arc(pt.x,pt.y,8,0,Math.PI*2);
-    ctx.fillStyle='#ffdd00';ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  pts.forEach(([x,y])=>{
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
+    ctx.fillStyle='#00e5ff';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
   });
+
+  const shortTopY=by+(CUT_H/p.H)*ph;
+  const shortMidY=(shortTopY+by+ph)/2;
+  const cutSideX=flipped?bx-14:bx+pw+14;
+  const cutAlign=flipped?'right':'left';
+  lbl(cutSideX,shortMidY,p.H_CORNER+' cm',cutAlign);
+  const straightX=flipped?bx+pw+14:bx-14;
+  const straightAlign=flipped?'left':'right';
+  lbl(straightX,cy,p.H+' cm',straightAlign);
+  lbl(cx,by+ph+18,p.W+' cm','center');
+  const topX1=flipped?bx+(CUT_W/p.W)*pw:bx;
+  const topX2=flipped?bx+pw:bx+(1-CUT_W/p.W)*pw;
+  lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
 }
 
 function lbl(x,y,text,align){
