@@ -108,6 +108,8 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   content:''; width:44px; height:44px; border-radius:50%; background:#fff;
 }
 #btn-capture:active { transform:translateX(-50%) scale(0.93); }
+
+#calib-prompt {
   position:fixed; top:calc(env(safe-area-inset-top,0px) + 10px);
   left:50%; transform:translateX(-50%);
   z-index:15; display:none;
@@ -264,7 +266,6 @@ function snapPoint(base, raw) {
 // ── Calibration ─────────────────────────────────────────────
 function toggleCalib() {
   if (calibMode !== 'off') { cancelCalib(); return; }
-  // place pts at centre by default
   const W = window.innerWidth, H = window.innerHeight;
   pt1 = {x: W*0.5, y: H*0.35};
   pt2 = {x: W*0.5, y: H*0.65};
@@ -273,6 +274,7 @@ function toggleCalib() {
   calibPrompt.style.display = 'block';
   calibPrompt.textContent   = '拖移兩端點對齊已知線段';
   calibBar.style.display    = 'flex';
+  btnCapture.style.display  = 'none';
   setTimeout(() => calibInput.focus(), 200);
 }
 
@@ -282,6 +284,7 @@ function cancelCalib() {
   calibPrompt.style.display = 'none';
   calibBar.style.display    = 'none';
   calibInput.value = '';
+  btnCapture.style.display  = 'flex';
 }
 
 function confirmCalib() {
