@@ -31,45 +31,27 @@ video {
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
-  overflow:hidden;
   height:30px;
-  max-width:40vw;
+  padding:0 6px;
 }
 #pallet-scroll {
   display:flex; align-items:center;
-  overflow-x:auto; scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  height:100%;
-  padding:0 32px;
-  gap:0;
+  height:100%; gap:0;
 }
-#pallet-scroll::-webkit-scrollbar { display:none; }
 
 .pscroll-item {
-  scroll-snap-align:center; flex-shrink:0;
-  padding:0 12px; height:30px;
+  flex-shrink:0;
+  padding:0 14px; height:30px;
   display:flex; align-items:center;
   font-size:12px; font-weight:600;
   color:rgba(255,255,255,0.4);
   cursor:pointer; white-space:nowrap;
   transition:all 0.2s;
+  border-radius:50px;
 }
 .pscroll-item.active {
   color:#fff; font-size:14px; font-weight:700;
 }
-
-/* centre tick marks */
-#pallet-capsule::before,
-#pallet-capsule::after {
-  content:'';
-  position:absolute; top:50%; transform:translateY(-50%);
-  width:1px; height:12px;
-  background:rgba(255,255,255,0.25);
-  pointer-events:none; z-index:3;
-}
-#pallet-capsule::before { left:50%; margin-left:-12px; }
-#pallet-capsule::after  { left:50%; margin-left:12px; }
 
 /* ── Shutter row ── */
 #shutter-row {
