@@ -310,10 +310,28 @@ palletScroll.addEventListener('click', e => {
 });
 
 // ── Pallet shape ─────────────────────────────────────────────
+// pallets with two corners cut (symmetric)
+const DUAL_CUT = new Set(['L118','L116','A1','A2','PRA']);
+
 function getPoly(key, flipped) {
   const p = PALLETS[key];
-  const rCutW = (p.W - p.W_TOP) / p.W;
   const rCutH = (p.H - p.H_CORNER) / p.H;
+
+  if (DUAL_CUT.has(key)) {
+    // symmetric: both top corners cut
+    const rCutW = (p.W - p.W_TOP) / 2 / p.W; // each side
+    return [
+      [0,          1],           // bottom-left
+      [1,          1],           // bottom-right
+      [1,          rCutH],       // right side up to corner
+      [1-rCutW,    0],           // top-right
+      [rCutW,      0],           // top-left
+      [0,          rCutH],       // left side up to corner
+    ];
+  }
+
+  // single cut
+  const rCutW = (p.W - p.W_TOP) / p.W;
   const poly = [[0,1],[1,1],[1,rCutH],[1-rCutW,0],[0,0]];
   if (flipped) return poly.map(([rx,ry]) => [1-rx, ry]);
   return poly;
@@ -464,17 +482,24 @@ function draw(){
     ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
   });
 
-  const shortTopY=by+(CUT_H/p.H)*ph;
-  const shortMidY=(shortTopY+by+ph)/2;
-  const cutSideX=flipped?bx-14:bx+pw+14;
-  const cutAlign=flipped?'right':'left';
-  lbl(cutSideX,shortMidY,p.H_CORNER+' cm',cutAlign);
-  const straightX=flipped?bx+pw+14:bx-14;
-  const straightAlign=flipped?'left':'right';
-  lbl(straightX, by+ph/2, p.H+' cm', straightAlign);
+  const shortTopY = by+(CUT_H/p.H)*ph;
+  const shortMidY = (shortTopY+by+ph)/2;
+
+  if (DUAL_CUT.has(currentKey)) {
+    // dual cut: H_CORNER on left side, H on right side
+    lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
+    lbl(bx+pw+14, by+ph/2, p.H+' cm', 'left');
+  } else {
+    const cutSideX  = flipped?bx-14:bx+pw+14;
+    const cutAlign  = flipped?'right':'left';
+    lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
+    const straightX     = flipped?bx+pw+14:bx-14;
+    const straightAlign = flipped?'left':'right';
+    lbl(straightX, by+ph/2, p.H+' cm', straightAlign);
+  }
   lbl(cx,by+ph+18,p.W+' cm','center');
-  const topX1=flipped?bx+(CUT_W/p.W)*pw:bx;
-  const topX2=flipped?bx+pw:bx+(1-CUT_W/p.W)*pw;
+  const topX1 = DUAL_CUT.has(currentKey) ? bx+(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+(CUT_W/p.W)*pw:bx);
+  const topX2 = DUAL_CUT.has(currentKey) ? bx+pw-(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+pw:bx+(1-CUT_W/p.W)*pw);
   lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
 }
 
