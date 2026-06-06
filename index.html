@@ -334,15 +334,8 @@ function selectPallet(key) {
   }
 }
 
-let scrollTimer = null;
-palletScroll.addEventListener('scroll', () => {
-  clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => snapNearest(), 50);
-});
-
 palletScroll.addEventListener('touchend', () => {
-  clearTimeout(scrollTimer);
-  setTimeout(() => snapNearest(), 30);
+  setTimeout(() => snapNearest(), 80);
 });
 
 function snapNearest() {
