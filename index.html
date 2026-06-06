@@ -26,11 +26,21 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
   height:30px; padding:0 6px;
+  max-width:60vw;
 }
-#pallet-scroll { display:flex; align-items:center; height:100%; }
+#pallet-scroll {
+  display:flex; align-items:center;
+  height:100%;
+  overflow-x:auto; scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  touch-action:pan-x;
+}
+#pallet-scroll::-webkit-scrollbar { display:none; }
 
 .pscroll-item {
-  flex-shrink:0; padding:0 14px; height:30px;
+  scroll-snap-align:center; flex-shrink:0;
+  padding:0 14px; height:30px;
   display:flex; align-items:center;
   font-size:12px; font-weight:600;
   color:rgba(255,255,255,0.4);
@@ -213,16 +223,22 @@ const previewImg   = document.getElementById('preview-img');
 const palletScroll = document.getElementById('pallet-scroll');
 
 const PALLETS = {
-  J2: { W:244, H:300, H_CORNER:190, W_TOP:120 },
-  J1: { W:244, H:295, H_CORNER:130, W_TOP:105 },
-  Q7: { W:244, H:300, H_CORNER:244, W_TOP:179 },
+  N118: { W:244, H:300, H_CORNER:190, W_TOP:120 },
+  P116: { W:244, H:295, H_CORNER:130, W_TOP:105 },
+  A116: { W:223, H:295, H_CORNER:185, W_TOP:105 },
+  L118: { W:498, H:300, H_CORNER:190, W_TOP:255 },
+  L116: { W:498, H:295, H_CORNER:130, W_TOP:220 },
+  Q7:   { W:244, H:300, H_CORNER:244, W_TOP:179 },
+  A1:   { W:317, H:244, H_CORNER:154, W_TOP:73  },
+  A2:   { W:317, H:244, H_CORNER:170, W_TOP:238 },
+  PRA:  { W:498, H:300, H_CORNER:244, W_TOP:368 },
 };
-const PALLET_KEYS = ['J1', 'J2', 'Q7'];
+const PALLET_KEYS = ['N118','P116','A116','L118','L116','Q7','A1','A2','PRA'];
 
 let pxPerCm    = window.innerHeight * 0.42 / 300; // default: J2 height fills ~42% screen
 let posX = 0, posY = 0;
 let flipped    = true;
-let currentKey = 'J2';
+let currentKey = 'N118';
 let overlayOn  = true;
 
 function toggleOverlay() {
@@ -250,6 +266,17 @@ function buildScrollSelector() {
     el.dataset.key = key;
     palletScroll.appendChild(el);
   });
+  setTimeout(() => scrollToActive(false), 50);
+}
+
+function scrollToActive(smooth = true) {
+  const items = palletScroll.querySelectorAll('.pscroll-item');
+  const idx   = PALLET_KEYS.indexOf(currentKey);
+  const item  = items[idx];
+  if (!item) return;
+  const wrapW  = palletScroll.offsetWidth;
+  const target = item.offsetLeft + item.offsetWidth/2 - wrapW/2;
+  palletScroll.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'instant' });
 }
 
 function selectPallet(key) {
@@ -258,9 +285,28 @@ function selectPallet(key) {
     el.classList.toggle('active', el.dataset.key === key));
 }
 
+// snap to nearest on scroll end
+let scrollTimer = null;
+palletScroll.addEventListener('scroll', () => {
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => {
+    const wrapW  = palletScroll.offsetWidth;
+    const centre = palletScroll.scrollLeft + wrapW/2;
+    let best = null, bestDist = Infinity;
+    palletScroll.querySelectorAll('.pscroll-item').forEach(el => {
+      const cx = el.offsetLeft + el.offsetWidth/2;
+      const d  = Math.abs(cx - centre);
+      if (d < bestDist) { bestDist = d; best = el; }
+    });
+    if (best) selectPallet(best.dataset.key);
+  }, 100);
+});
+
 palletScroll.addEventListener('click', e => {
   const item = e.target.closest('.pscroll-item');
-  if (item) selectPallet(item.dataset.key);
+  if (!item) return;
+  selectPallet(item.dataset.key);
+  scrollToActive();
 });
 
 // ── Pallet shape ─────────────────────────────────────────────
