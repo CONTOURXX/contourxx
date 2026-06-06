@@ -283,6 +283,12 @@ function selectPallet(key) {
   currentKey = key;
   palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
     el.classList.toggle('active', el.dataset.key === key));
+  // auto-scale: fit pallet width within 80% of screen width
+  const p = PALLETS[key];
+  const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
+  const maxPxPerCmH = window.innerHeight * 0.80 / p.H;
+  pxPerCm = Math.min(maxPxPerCmW, maxPxPerCmH);
+  posX = 0; posY = 0;
 }
 
 // snap to nearest on scroll end
@@ -486,9 +492,8 @@ function draw(){
   const shortMidY = (shortTopY+by+ph)/2;
 
   if (DUAL_CUT.has(currentKey)) {
-    // dual cut: H_CORNER on left side, H on right side
+    // dual cut: only show H_CORNER on left, no total height
     lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
-    lbl(bx+pw+14, by+ph/2, p.H+' cm', 'left');
   } else {
     const cutSideX  = flipped?bx-14:bx+pw+14;
     const cutAlign  = flipped?'right':'left';
