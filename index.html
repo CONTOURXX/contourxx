@@ -308,7 +308,7 @@ canvas.addEventListener('touchmove', e => {
       const p = PALLETS[currentKey];
       // current box centre in screen coords
       const cx = W/2 + posX*W;
-      const bottomY = H*0.75 + posY*H;
+      const bottomY = H/2 + p.H*pxPerCm/2 + posY*H;
       const cy = bottomY - p.H*pxPerCm/2;
       // vector from box centre to pinch mid
       const vx = mid.x - cx;
@@ -321,7 +321,7 @@ canvas.addEventListener('touchmove', e => {
       const newCx = mid.x - vx;
       const newCy = mid.y - vy;
       posX = Math.max(-0.4, Math.min(0.4, (newCx - W/2) / W));
-      posY = Math.max(-0.4, Math.min(0.4, (newCy + newPh/2 - H*0.75) / H));
+      posY = Math.max(-0.4, Math.min(0.4, (newCy - H/2) / H));
     }
     lastDist=d; lastMid=mid; dragContour=false;
   } else if(ids.length===1&&dragContour){
@@ -396,7 +396,7 @@ function draw(){
   const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
   const ph=p.H*pxPerCm, pw=p.W*pxPerCm;
   const cx=W/2+posX*W;
-  const bottomY=H*0.75+posY*H; // fixed bottom edge
+  const bottomY=H/2+ph/2+posY*H; // centred by default
   const by=bottomY-ph, bx=cx-pw/2;
   const poly=getPoly(currentKey,flipped);
   const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
