@@ -318,8 +318,8 @@ canvas.addEventListener('touchmove', e => {
       pxPerCm = Math.max(0.3, Math.min(8, pxPerCm * ratio));
       // recompute box centre so pinch point stays fixed
       const newPh = p.H * pxPerCm;
-      const newCx = mid.x - vx * ratio;
-      const newCy = mid.y - vy * ratio;
+      const newCx = mid.x - vx;
+      const newCy = mid.y - vy;
       posX = Math.max(-0.4, Math.min(0.4, (newCx - W/2) / W));
       posY = Math.max(-0.4, Math.min(0.4, (newCy + newPh/2 - H*0.75) / H));
     }
