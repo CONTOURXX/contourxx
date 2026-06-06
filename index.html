@@ -47,7 +47,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   font-size:12px; font-weight:600;
   color:rgba(255,255,255,0.3);
   cursor:pointer; white-space:nowrap;
-  transition:all 0.2s;
+  transition:all 0.1s;
 }
 .pscroll-item.active {
   color:#fff; font-size:14px; font-weight:700;
@@ -347,7 +347,7 @@ palletScroll.addEventListener('scroll', () => {
       if (d < bestDist) { bestDist = d; best = el; }
     });
     if (best) selectPallet(best.dataset.key);
-  }, 100);
+  }, 50);
 });
 
 palletScroll.addEventListener('click', e => {
