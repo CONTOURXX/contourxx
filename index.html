@@ -33,12 +33,16 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #pallet-scroll {
   display:flex; align-items:center;
   height:100%;
-  overflow-x:auto;
+  overflow-x:scroll;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  touch-action:pan-x;
+  touch-action:pan-x !important;
 }
 #pallet-scroll::-webkit-scrollbar { display:none; }
+
+#pallet-capsule, #pallet-capsule * {
+  touch-action:pan-x !important;
+}
 
 .pscroll-item {
   flex-shrink:0;
