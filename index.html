@@ -290,12 +290,12 @@ let isFrozen = false;
 // ── Pallet selector ──────────────────────────────────────────
 function buildScrollSelector() {
   palletScroll.innerHTML = '';
-  const capsuleW = palletCapsule.offsetWidth;
-  const itemW    = 56; // px per item
+  const itemW = 56;
 
-  // leading spacer so first item can centre
+  // spacer placeholder - will be sized after layout
   const spacer1 = document.createElement('div');
-  spacer1.style.cssText = `flex-shrink:0;width:${capsuleW/2 - itemW/2}px;height:30px;`;
+  spacer1.className = 'scroll-spacer';
+  spacer1.style.cssText = `flex-shrink:0;height:30px;`;
   palletScroll.appendChild(spacer1);
 
   PALLET_KEYS.forEach(key => {
@@ -307,12 +307,18 @@ function buildScrollSelector() {
     palletScroll.appendChild(el);
   });
 
-  // trailing spacer
   const spacer2 = document.createElement('div');
-  spacer2.style.cssText = `flex-shrink:0;width:${capsuleW/2 - itemW/2}px;height:30px;`;
+  spacer2.className = 'scroll-spacer';
+  spacer2.style.cssText = `flex-shrink:0;height:30px;`;
   palletScroll.appendChild(spacer2);
 
-  setTimeout(() => scrollToActive(false), 50);
+  // size spacers after layout is ready
+  requestAnimationFrame(() => {
+    const capsuleW = palletCapsule.offsetWidth;
+    const pad = capsuleW/2 - itemW/2;
+    document.querySelectorAll('.scroll-spacer').forEach(s => s.style.width = pad + 'px');
+    setTimeout(() => scrollToActive(false), 30);
+  });
 }
 
 function scrollToActive(smooth = true) {
