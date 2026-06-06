@@ -25,8 +25,10 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
-  height:30px; padding:0 6px;
-  max-width:60vw;
+  height:30px;
+  width:60vw;
+  position:fixed;
+  overflow:hidden;
 }
 #pallet-scroll {
   display:flex; align-items:center;
@@ -40,14 +42,37 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 
 .pscroll-item {
   scroll-snap-align:center; flex-shrink:0;
-  padding:0 14px; height:30px;
-  display:flex; align-items:center;
+  height:30px;
+  display:flex; align-items:center; justify-content:center;
   font-size:12px; font-weight:600;
-  color:rgba(255,255,255,0.4);
+  color:rgba(255,255,255,0.3);
   cursor:pointer; white-space:nowrap;
-  transition:all 0.2s; border-radius:50px;
+  transition:all 0.2s;
 }
-.pscroll-item.active { color:#fff; font-size:14px; font-weight:700; }
+.pscroll-item.active {
+  color:#fff; font-size:14px; font-weight:700;
+}
+
+/* centre indicator ticks */
+#pallet-capsule::before,
+#pallet-capsule::after {
+  content:'';
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:1px; height:14px;
+  background:rgba(255,255,255,0.3);
+  pointer-events:none; z-index:3;
+}
+#pallet-capsule::before { left:calc(50% - 1px); margin-left:-18px; }
+#pallet-capsule::after  { left:calc(50% - 1px); margin-left:18px; }
+
+/* fade edges */
+#pallet-capsule .fade-l,
+#pallet-capsule .fade-r {
+  position:absolute; top:0; bottom:0; width:35%;
+  pointer-events:none; z-index:2;
+}
+#pallet-capsule .fade-l { left:0;  background:linear-gradient(to right, rgba(0,0,0,0.6), transparent); border-radius:50px 0 0 50px; }
+#pallet-capsule .fade-r { right:0; background:linear-gradient(to left,  rgba(0,0,0,0.6), transparent); border-radius:0 50px 50px 0; }
 
 /* ── Shutter row ── */
 #shutter-row {
@@ -200,6 +225,8 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 </div>
 
 <div id="pallet-capsule">
+  <div class="fade-l"></div>
+  <div class="fade-r"></div>
   <div id="pallet-scroll"></div>
 </div>
 
@@ -259,13 +286,28 @@ let isFrozen = false;
 // ── Pallet selector ──────────────────────────────────────────
 function buildScrollSelector() {
   palletScroll.innerHTML = '';
+  const capsuleW = palletCapsule.offsetWidth;
+  const itemW    = 56; // px per item
+
+  // leading spacer so first item can centre
+  const spacer1 = document.createElement('div');
+  spacer1.style.cssText = `flex-shrink:0;width:${capsuleW/2 - itemW/2}px;height:30px;`;
+  palletScroll.appendChild(spacer1);
+
   PALLET_KEYS.forEach(key => {
     const el = document.createElement('div');
     el.className = 'pscroll-item' + (key === currentKey ? ' active' : '');
     el.textContent = key;
     el.dataset.key = key;
+    el.style.width = itemW + 'px';
     palletScroll.appendChild(el);
   });
+
+  // trailing spacer
+  const spacer2 = document.createElement('div');
+  spacer2.style.cssText = `flex-shrink:0;width:${capsuleW/2 - itemW/2}px;height:30px;`;
+  palletScroll.appendChild(spacer2);
+
   setTimeout(() => scrollToActive(false), 50);
 }
 
@@ -274,8 +316,8 @@ function scrollToActive(smooth = true) {
   const idx   = PALLET_KEYS.indexOf(currentKey);
   const item  = items[idx];
   if (!item) return;
-  const wrapW  = palletScroll.offsetWidth;
-  const target = item.offsetLeft + item.offsetWidth/2 - wrapW/2;
+  const capsuleW = palletCapsule.offsetWidth;
+  const target   = item.offsetLeft - capsuleW/2 + item.offsetWidth/2;
   palletScroll.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'instant' });
 }
 
@@ -283,7 +325,6 @@ function selectPallet(key) {
   currentKey = key;
   palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
     el.classList.toggle('active', el.dataset.key === key));
-  // auto-scale only for dual-cut pallets
   if (DUAL_CUT.has(key)) {
     const p = PALLETS[key];
     const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
@@ -293,13 +334,12 @@ function selectPallet(key) {
   }
 }
 
-// snap to nearest on scroll end
 let scrollTimer = null;
 palletScroll.addEventListener('scroll', () => {
   clearTimeout(scrollTimer);
   scrollTimer = setTimeout(() => {
-    const wrapW  = palletScroll.offsetWidth;
-    const centre = palletScroll.scrollLeft + wrapW/2;
+    const capsuleW = palletCapsule.offsetWidth;
+    const centre   = palletScroll.scrollLeft + capsuleW/2;
     let best = null, bestDist = Infinity;
     palletScroll.querySelectorAll('.pscroll-item').forEach(el => {
       const cx = el.offsetLeft + el.offsetWidth/2;
