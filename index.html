@@ -283,12 +283,14 @@ function selectPallet(key) {
   currentKey = key;
   palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
     el.classList.toggle('active', el.dataset.key === key));
-  // auto-scale: fit pallet width within 80% of screen width
-  const p = PALLETS[key];
-  const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
-  const maxPxPerCmH = window.innerHeight * 0.80 / p.H;
-  pxPerCm = Math.min(maxPxPerCmW, maxPxPerCmH);
-  posX = 0; posY = 0;
+  // auto-scale only for dual-cut pallets
+  if (DUAL_CUT.has(key)) {
+    const p = PALLETS[key];
+    const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
+    const maxPxPerCmH = window.innerHeight * 0.80 / p.H;
+    pxPerCm = Math.min(maxPxPerCmW, maxPxPerCmH);
+    posX = 0; posY = 0;
+  }
 }
 
 // snap to nearest on scroll end
