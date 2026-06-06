@@ -315,7 +315,7 @@ function buildScrollSelector() {
   // size spacers after layout is ready
   requestAnimationFrame(() => {
     const capsuleW = palletCapsule.offsetWidth;
-    const pad = capsuleW/2 - itemW/2;
+    const pad = Math.ceil(capsuleW / 2);
     document.querySelectorAll('.scroll-spacer').forEach(s => s.style.width = pad + 'px');
     requestAnimationFrame(() => scrollToActive(false));
   });
