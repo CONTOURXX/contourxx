@@ -370,8 +370,9 @@ function draw(){
   const p=PALLETS[currentKey];
   const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
   const ph=p.H*pxPerCm, pw=p.W*pxPerCm;
-  const cx=W/2+posX*W, cy=H/2+posY*H;
-  const bx=cx-pw/2, by=cy-ph/2;
+  const cx=W/2+posX*W;
+  const bottomY=H*0.75+posY*H; // fixed bottom edge
+  const by=bottomY-ph, bx=cx-pw/2;
   const poly=getPoly(currentKey,flipped);
   const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
 
@@ -399,7 +400,7 @@ function draw(){
   lbl(cutSideX,shortMidY,p.H_CORNER+' cm',cutAlign);
   const straightX=flipped?bx+pw+14:bx-14;
   const straightAlign=flipped?'left':'right';
-  lbl(straightX,cy,p.H+' cm',straightAlign);
+  lbl(straightX, by+ph/2, p.H+' cm', straightAlign);
   lbl(cx,by+ph+18,p.W+' cm','center');
   const topX1=flipped?bx+(CUT_W/p.W)*pw:bx;
   const topX2=flipped?bx+pw:bx+(1-CUT_W/p.W)*pw;
