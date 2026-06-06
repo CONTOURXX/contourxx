@@ -317,18 +317,18 @@ function buildScrollSelector() {
     const capsuleW = palletCapsule.offsetWidth;
     const pad = capsuleW/2 - itemW/2;
     document.querySelectorAll('.scroll-spacer').forEach(s => s.style.width = pad + 'px');
-    setTimeout(() => scrollToActive(false), 30);
+    requestAnimationFrame(() => scrollToActive(false));
   });
 }
 
 function scrollToActive(smooth = true) {
-  const items = palletScroll.querySelectorAll('.pscroll-item');
-  const idx   = PALLET_KEYS.indexOf(currentKey);
-  const item  = items[idx];
+  const items    = palletScroll.querySelectorAll('.pscroll-item');
+  const idx      = PALLET_KEYS.indexOf(currentKey);
+  const item     = items[idx];
   if (!item) return;
   const capsuleW = palletCapsule.offsetWidth;
-  const target   = item.offsetLeft - capsuleW/2 + item.offsetWidth/2;
-  palletScroll.scrollTo({ left: target, behavior: smooth ? 'smooth' : 'instant' });
+  const target   = item.offsetLeft + item.offsetWidth/2 - capsuleW/2;
+  palletScroll.scrollTo({ left: Math.max(0, target), behavior: smooth ? 'smooth' : 'instant' });
 }
 
 function selectPallet(key) {
