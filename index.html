@@ -344,8 +344,16 @@ function selectPallet(key) {
   }
 }
 
-palletScroll.addEventListener('touchend', () => {
-  setTimeout(() => snapNearest(), 80);
+let scrollTimer = null;
+let isScrolling = false;
+
+palletScroll.addEventListener('scroll', () => {
+  isScrolling = true;
+  clearTimeout(scrollTimer);
+  scrollTimer = setTimeout(() => {
+    isScrolling = false;
+    snapNearest();
+  }, 150);
 });
 
 function snapNearest() {
@@ -359,8 +367,8 @@ function snapNearest() {
   });
   if (!best) return;
   selectPallet(best.dataset.key);
-  const target = best.offsetLeft - capsuleW/2 + best.offsetWidth/2;
-  palletScroll.scrollTo({ left: target, behavior: 'smooth' });
+  const target = best.offsetLeft + best.offsetWidth/2 - capsuleW/2;
+  palletScroll.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
 
 palletScroll.addEventListener('click', e => {
