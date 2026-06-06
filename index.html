@@ -277,7 +277,8 @@ function flipContour() { flipped = !flipped; }
 
 // ── Touch ────────────────────────────────────────────────────
 let touches  = {};
-let lastDist = null;
+let lastDist  = null;
+let lastMid   = null;
 let dragContour = false;
 
 canvas.addEventListener('touchstart', e => {
@@ -285,8 +286,11 @@ canvas.addEventListener('touchstart', e => {
   Array.from(e.changedTouches).forEach(t =>
     touches[t.identifier] = {x:t.clientX, y:t.clientY});
   const ids = Object.keys(touches);
-  if (ids.length===2) { lastDist=dist2(touches[ids[0]],touches[ids[1]]); dragContour=false; }
-  else { lastDist=null; dragContour=true; }
+  if (ids.length===2) {
+    lastDist = dist2(touches[ids[0]],touches[ids[1]]);
+    lastMid  = midPoint(touches[ids[0]],touches[ids[1]]);
+    dragContour=false;
+  } else { lastDist=null; lastMid=null; dragContour=true; }
 },{passive:false});
 
 canvas.addEventListener('touchmove', e => {
@@ -297,9 +301,29 @@ canvas.addEventListener('touchmove', e => {
     touches[t.identifier]={x:t.clientX,y:t.clientY});
   const ids=Object.keys(touches);
   if (ids.length===2) {
-    const d=dist2(touches[ids[0]],touches[ids[1]]);
-    if(lastDist){pxPerCm*=d/lastDist;pxPerCm=Math.max(0.3,Math.min(8,pxPerCm));}
-    lastDist=d; dragContour=false;
+    const d   = dist2(touches[ids[0]],touches[ids[1]]);
+    const mid = midPoint(touches[ids[0]],touches[ids[1]]);
+    if (lastDist && lastMid) {
+      const W = window.innerWidth, H = window.innerHeight;
+      const p = PALLETS[currentKey];
+      // current box centre in screen coords
+      const cx = W/2 + posX*W;
+      const bottomY = H*0.75 + posY*H;
+      const cy = bottomY - p.H*pxPerCm/2;
+      // vector from box centre to pinch mid
+      const vx = mid.x - cx;
+      const vy = mid.y - cy;
+      // scale
+      const ratio = d / lastDist;
+      pxPerCm = Math.max(0.3, Math.min(8, pxPerCm * ratio));
+      // recompute box centre so pinch point stays fixed
+      const newPh = p.H * pxPerCm;
+      const newCx = mid.x - vx * ratio;
+      const newCy = mid.y - vy * ratio;
+      posX = Math.max(-0.4, Math.min(0.4, (newCx - W/2) / W));
+      posY = Math.max(-0.4, Math.min(0.4, (newCy + newPh/2 - H*0.75) / H));
+    }
+    lastDist=d; lastMid=mid; dragContour=false;
   } else if(ids.length===1&&dragContour){
     const id=ids[0];
     const dx=(touches[id].x-(prev[id]?.x||touches[id].x))/window.innerWidth;
@@ -312,10 +336,11 @@ canvas.addEventListener('touchmove', e => {
 canvas.addEventListener('touchend', e=>{
   e.preventDefault();
   Array.from(e.changedTouches).forEach(t=>delete touches[t.identifier]);
-  if(Object.keys(touches).length<2)lastDist=null;
+  if(Object.keys(touches).length<2){lastDist=null;lastMid=null;}
 },{passive:false});
 
 function dist2(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function midPoint(a,b){return {x:(a.x+b.x)/2, y:(a.y+b.y)/2};}
 
 // ── Camera ───────────────────────────────────────────────────
 async function startCamera(){
