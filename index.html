@@ -26,45 +26,25 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
   height:30px;
-  width:60vw;
-  position:fixed;
-  overflow:hidden;
-}
-#pallet-scroll {
   display:flex; align-items:center;
-  height:100%;
-  overflow-x:scroll;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  touch-action:pan-x !important;
+  gap:2px; padding:0 6px;
 }
-#pallet-scroll::-webkit-scrollbar { display:none; }
-
-#pallet-capsule, #pallet-capsule * {
-  touch-action:pan-x !important;
-}
-
-.pscroll-item {
-  flex-shrink:0;
-  height:30px;
+.pallet-arrow {
+  width:24px; height:24px;
   display:flex; align-items:center; justify-content:center;
-  font-size:12px; font-weight:600;
-  color:rgba(255,255,255,0.3);
-  cursor:pointer; white-space:nowrap;
-  transition:all 0.1s;
+  font-size:14px; font-weight:600;
+  color:rgba(255,255,255,0.5);
+  cursor:pointer; flex-shrink:0;
+  border-radius:50%;
+  transition:color 0.15s;
 }
-.pscroll-item.active {
-  color:#fff; font-size:14px; font-weight:700;
+.pallet-arrow.disabled { color:rgba(255,255,255,0.15); pointer-events:none; }
+.pallet-arrow:active { color:#fff; }
+#pallet-label {
+  font-size:13px; font-weight:700;
+  color:#fff; white-space:nowrap;
+  min-width:52px; text-align:center;
 }
-
-/* fade edges */
-#pallet-capsule .fade-l,
-#pallet-capsule .fade-r {
-  position:absolute; top:0; bottom:0; width:35%;
-  pointer-events:none; z-index:2;
-}
-#pallet-capsule .fade-l { left:0;  background:linear-gradient(to right, rgba(0,0,0,0.6), transparent); border-radius:50px 0 0 50px; }
-#pallet-capsule .fade-r { right:0; background:linear-gradient(to left,  rgba(0,0,0,0.6), transparent); border-radius:0 50px 50px 0; }
 
 /* ── Shutter row ── */
 #shutter-row {
@@ -217,9 +197,9 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 </div>
 
 <div id="pallet-capsule">
-  <div class="fade-l"></div>
-  <div class="fade-r"></div>
-  <div id="pallet-scroll"></div>
+  <div class="pallet-arrow" id="pallet-prev" onclick="shiftPallet(-1)">‹</div>
+  <div id="pallet-label">N118</div>
+  <div class="pallet-arrow" id="pallet-next" onclick="shiftPallet(1)">›</div>
 </div>
 
 <div id="shutter-row">
@@ -239,7 +219,6 @@ const btnOverlay   = document.getElementById('btn-overlay');
 const flash        = document.getElementById('flash');
 const photoPreview = document.getElementById('photo-preview');
 const previewImg   = document.getElementById('preview-img');
-const palletScroll = document.getElementById('pallet-scroll');
 
 const PALLETS = {
   N118: { W:244, H:300, H_CORNER:190, W_TOP:120 },
@@ -276,53 +255,31 @@ function dpr() { return window.devicePixelRatio || 1; }
 let isFrozen = false;
 
 // ── Pallet selector ──────────────────────────────────────────
+const palletLabel = document.getElementById('pallet-label');
+const palletPrev  = document.getElementById('pallet-prev');
+const palletNext  = document.getElementById('pallet-next');
+
 function buildScrollSelector() {
-  palletScroll.innerHTML = '';
-  const itemW = 56;
-
-  // spacer placeholder - will be sized after layout
-  const spacer1 = document.createElement('div');
-  spacer1.className = 'scroll-spacer';
-  spacer1.style.cssText = `flex-shrink:0;height:30px;`;
-  palletScroll.appendChild(spacer1);
-
-  PALLET_KEYS.forEach(key => {
-    const el = document.createElement('div');
-    el.className = 'pscroll-item' + (key === currentKey ? ' active' : '');
-    el.textContent = key;
-    el.dataset.key = key;
-    el.style.width = itemW + 'px';
-    palletScroll.appendChild(el);
-  });
-
-  const spacer2 = document.createElement('div');
-  spacer2.className = 'scroll-spacer';
-  spacer2.style.cssText = `flex-shrink:0;height:30px;`;
-  palletScroll.appendChild(spacer2);
-
-  // size spacers after layout is ready
-  requestAnimationFrame(() => {
-    const capsuleW = palletCapsule.offsetWidth;
-    const pad = Math.ceil(capsuleW / 2);
-    document.querySelectorAll('.scroll-spacer').forEach(s => s.style.width = pad + 'px');
-    requestAnimationFrame(() => scrollToActive(false));
-  });
+  updatePalletUI();
 }
 
-function scrollToActive(smooth = true) {
-  const items    = palletScroll.querySelectorAll('.pscroll-item');
-  const idx      = PALLET_KEYS.indexOf(currentKey);
-  const item     = items[idx];
-  if (!item) return;
-  const capsuleW = palletCapsule.offsetWidth;
-  const target   = item.offsetLeft + item.offsetWidth/2 - capsuleW/2;
-  palletScroll.scrollTo({ left: Math.max(0, target), behavior: smooth ? 'smooth' : 'instant' });
+function updatePalletUI() {
+  const idx = PALLET_KEYS.indexOf(currentKey);
+  palletLabel.textContent = currentKey;
+  palletPrev.classList.toggle('disabled', idx === 0);
+  palletNext.classList.toggle('disabled', idx === PALLET_KEYS.length - 1);
+}
+
+function shiftPallet(dir) {
+  const idx = PALLET_KEYS.indexOf(currentKey);
+  const next = idx + dir;
+  if (next < 0 || next >= PALLET_KEYS.length) return;
+  selectPallet(PALLET_KEYS[next]);
 }
 
 function selectPallet(key) {
   currentKey = key;
-  palletScroll.querySelectorAll('.pscroll-item').forEach(el =>
-    el.classList.toggle('active', el.dataset.key === key));
+  updatePalletUI();
   if (DUAL_CUT.has(key)) {
     const p = PALLETS[key];
     const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
@@ -331,61 +288,6 @@ function selectPallet(key) {
     posX = 0; posY = 0;
   }
 }
-
-let scrollTimer = null;
-let isScrolling = false;
-
-// lock capsule scroll to horizontal only
-let capStartX = 0, capStartY = 0, capStartScroll = 0, capLocked = false;
-
-palletScroll.addEventListener('touchstart', e => {
-  capStartX      = e.touches[0].clientX;
-  capStartY      = e.touches[0].clientY;
-  capStartScroll = palletScroll.scrollLeft;
-  capLocked      = false;
-}, {passive:true});
-
-palletScroll.addEventListener('touchmove', e => {
-  const dx = e.touches[0].clientX - capStartX;
-  const dy = e.touches[0].clientY - capStartY;
-  if (!capLocked) {
-    if (Math.abs(dx) > Math.abs(dy)) capLocked = true;
-    else { return; } // vertical swipe → ignore
-  }
-  e.preventDefault();
-  palletScroll.scrollLeft = capStartScroll - dx;
-}, {passive:false});
-
-palletScroll.addEventListener('scroll', () => {
-  isScrolling = true;
-  clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(() => {
-    isScrolling = false;
-    snapNearest();
-  }, 50);
-});
-
-function snapNearest() {
-  const capsuleW = palletCapsule.offsetWidth;
-  const centre   = palletScroll.scrollLeft + capsuleW/2;
-  let best = null, bestDist = Infinity;
-  palletScroll.querySelectorAll('.pscroll-item').forEach(el => {
-    const cx = el.offsetLeft + el.offsetWidth/2;
-    const d  = Math.abs(cx - centre);
-    if (d < bestDist) { bestDist = d; best = el; }
-  });
-  if (!best) return;
-  selectPallet(best.dataset.key);
-  const target = best.offsetLeft + best.offsetWidth/2 - capsuleW/2;
-  palletScroll.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-}
-
-palletScroll.addEventListener('click', e => {
-  const item = e.target.closest('.pscroll-item');
-  if (!item) return;
-  selectPallet(item.dataset.key);
-  scrollToActive();
-});
 
 // ── Pallet shape ─────────────────────────────────────────────
 // pallets with two corners cut (symmetric)
