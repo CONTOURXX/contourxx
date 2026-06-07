@@ -37,8 +37,9 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   font-size:18px; font-weight:400;
   color:rgba(255,255,255,0.6);
   cursor:pointer; flex-shrink:0;
-  touch-action:none;
-  -webkit-user-select:none;
+  background:transparent; border:none;
+  -webkit-appearance:none;
+  touch-action:manipulation;
 }
 .pallet-arrow.disabled { color:rgba(255,255,255,0.15); pointer-events:none; }
 .pallet-arrow:active { color:#fff; }
@@ -199,9 +200,9 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 </div>
 
 <div id="pallet-capsule">
-  <div class="pallet-arrow" id="pallet-prev">‹</div>
+  <button class="pallet-arrow" id="pallet-prev">‹</button>
   <div id="pallet-label">N118</div>
-  <div class="pallet-arrow" id="pallet-next">›</div>
+  <button class="pallet-arrow" id="pallet-next">›</button>
 </div>
 
 <div id="shutter-row">
@@ -261,8 +262,8 @@ const palletLabel = document.getElementById('pallet-label');
 const palletPrev  = document.getElementById('pallet-prev');
 const palletNext  = document.getElementById('pallet-next');
 
-palletPrev.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); shiftPallet(-1); });
-palletNext.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); shiftPallet(1); });
+palletPrev.addEventListener('click', () => shiftPallet(-1));
+palletNext.addEventListener('click', () => shiftPallet(1));
 
 function buildScrollSelector() {
   updatePalletUI();
