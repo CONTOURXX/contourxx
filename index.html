@@ -26,9 +26,10 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
   height:34px;
-  display:flex; align-items:center;
+  align-items:center;
   gap:0; padding:0 8px;
   width:160px;
+  flex-direction:row;
 }
 .pallet-arrow {
   width:32px; height:34px;
@@ -244,7 +245,7 @@ function toggleOverlay() {
   btnOverlay.classList.toggle('on', overlayOn);
   btnFlip.style.opacity        = overlayOn ? '1' : '0.3';
   btnFlip.style.pointerEvents  = overlayOn ? 'auto' : 'none';
-  palletCapsule.style.display  = overlayOn ? 'block' : 'none';
+  palletCapsule.style.display  = overlayOn ? 'flex' : 'none';
 }
 
 const frozenCanvas = document.getElementById('frozen-canvas');
@@ -406,7 +407,7 @@ async function startCamera(){
   video.srcObject=stream;
   video.onloadedmetadata=()=>video.play().then(()=>{
     document.getElementById('screen-start').style.display='none';
-    palletCapsule.style.display='block';
+    palletCapsule.style.display='flex';
     shutterRow.style.display   ='flex';
     btnFlip.style.display      ='flex';
     btnFlip.style.opacity      ='1';
@@ -531,7 +532,7 @@ function capture(){
     // restore flip and capsule for adjustment
     btnFlip.style.opacity      ='1';
     btnFlip.style.pointerEvents='auto';
-    palletCapsule.style.display='block';
+    palletCapsule.style.display='flex';
   }
 }
 
