@@ -290,14 +290,23 @@ function shiftPallet(dir) {
   selectPallet(PALLET_KEYS[next]);
 }
 
+let savedPxPerCm = null; // saves single-cut scale
+
 function selectPallet(key) {
+  const wasDual = DUAL_CUT.has(currentKey);
+  const isDual  = DUAL_CUT.has(key);
   currentKey = key;
   updatePalletUI();
-  if (DUAL_CUT.has(key)) {
+
+  if (isDual && !wasDual) {
+    // switching to dual: save current scale, then auto-fit
+    savedPxPerCm = pxPerCm;
     const p = PALLETS[key];
-    const maxPxPerCmW = window.innerWidth  * 0.80 / p.W;
-    const maxPxPerCmH = window.innerHeight * 0.80 / p.H;
-    pxPerCm = Math.min(maxPxPerCmW, maxPxPerCmH);
+    pxPerCm = Math.min(window.innerWidth*0.80/p.W, window.innerHeight*0.80/p.H);
+    posX = 0; posY = 0;
+  } else if (!isDual && wasDual) {
+    // switching back to single: restore saved scale
+    if (savedPxPerCm) pxPerCm = savedPxPerCm;
     posX = 0; posY = 0;
   }
 }
