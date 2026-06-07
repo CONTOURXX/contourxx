@@ -300,9 +300,9 @@ function selectPallet(key) {
   currentKey = key;
   updatePalletUI();
 
-  if (isDual && !wasDual) {
-    // switching to dual: save current scale, then auto-fit
-    savedPxPerCm = pxPerCm;
+  if (isDual) {
+    // always auto-fit for dual cut
+    if (!wasDual) savedPxPerCm = pxPerCm;
     const p = PALLETS[key];
     pxPerCm = Math.min(window.innerWidth*0.75/p.W, window.innerHeight*0.75/p.H);
     posX = 0; posY = 0;
