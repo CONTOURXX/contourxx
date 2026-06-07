@@ -304,7 +304,7 @@ function selectPallet(key) {
     // switching to dual: save current scale, then auto-fit
     savedPxPerCm = pxPerCm;
     const p = PALLETS[key];
-    pxPerCm = Math.min(window.innerWidth*0.80/p.W, window.innerHeight*0.80/p.H);
+    pxPerCm = Math.min(window.innerWidth*0.75/p.W, window.innerHeight*0.75/p.H);
     posX = 0; posY = 0;
   } else if (!isDual && wasDual) {
     // switching back to single: restore saved scale
