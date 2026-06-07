@@ -25,26 +25,25 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   border-radius:50px;
   border:0.5px solid rgba(255,255,255,0.15);
-  height:32px;
+  height:34px;
   display:flex; align-items:center;
-  gap:4px; padding:0 10px;
-  white-space:nowrap;
+  gap:0; padding:0 8px;
+  width:160px;
 }
 .pallet-arrow {
-  width:24px; height:24px;
+  width:32px; height:34px;
   display:flex; align-items:center; justify-content:center;
-  font-size:14px; font-weight:600;
-  color:rgba(255,255,255,0.5);
+  font-size:18px; font-weight:400;
+  color:rgba(255,255,255,0.6);
   cursor:pointer; flex-shrink:0;
-  border-radius:50%;
-  transition:color 0.15s;
+  touch-action:manipulation;
 }
 .pallet-arrow.disabled { color:rgba(255,255,255,0.15); pointer-events:none; }
 .pallet-arrow:active { color:#fff; }
 #pallet-label {
-  font-size:13px; font-weight:700;
+  flex:1; font-size:13px; font-weight:700;
   color:#fff; white-space:nowrap;
-  min-width:64px; text-align:center;
+  text-align:center;
 }
 
 /* ── Shutter row ── */
@@ -198,9 +197,9 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 </div>
 
 <div id="pallet-capsule">
-  <div class="pallet-arrow" id="pallet-prev" onclick="shiftPallet(-1)">‹</div>
+  <div class="pallet-arrow" id="pallet-prev">‹</div>
   <div id="pallet-label">N118</div>
-  <div class="pallet-arrow" id="pallet-next" onclick="shiftPallet(1)">›</div>
+  <div class="pallet-arrow" id="pallet-next">›</div>
 </div>
 
 <div id="shutter-row">
@@ -259,6 +258,11 @@ let isFrozen = false;
 const palletLabel = document.getElementById('pallet-label');
 const palletPrev  = document.getElementById('pallet-prev');
 const palletNext  = document.getElementById('pallet-next');
+
+palletPrev.addEventListener('touchend', e => { e.preventDefault(); shiftPallet(-1); });
+palletNext.addEventListener('touchend', e => { e.preventDefault(); shiftPallet(1); });
+palletPrev.addEventListener('click', () => shiftPallet(-1));
+palletNext.addEventListener('click', () => shiftPallet(1));
 
 function buildScrollSelector() {
   updatePalletUI();
