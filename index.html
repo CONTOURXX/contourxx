@@ -519,34 +519,35 @@ function capture(){
   flash.style.opacity='1';
   setTimeout(()=>flash.style.opacity='0',120);
 
+  const dr=dpr();
+  const W=window.innerWidth*dr, H=window.innerHeight*dr;
+
+  // object-fit: cover calculation
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const scale=Math.max(W/vw, H/vh);
+  const dw=vw*scale, dh=vh*scale;
+  const dx=(W-dw)/2, dy=(H-dh)/2;
+
   if (overlayOn) {
-    // overlay on → direct composite save
-    const W=canvas.width, H=canvas.height;
     const comp=document.createElement('canvas');
     comp.width=W; comp.height=H;
     const c=comp.getContext('2d');
-    c.drawImage(video,0,0,W,H);
-    c.drawImage(canvas,0,0,W,H);
+    c.drawImage(video, dx, dy, dw, dh);
+    c.drawImage(canvas, 0, 0, W, H);
     previewImg.src=comp.toDataURL('image/jpeg',0.92);
     photoPreview.style.display='flex';
   } else {
-    // overlay off → freeze frame, show overlay for adjustment
-    const dr=dpr();
-    frozenCanvas.width =window.innerWidth *dr;
-    frozenCanvas.height=window.innerHeight*dr;
-    frozenCanvas.style.width =window.innerWidth +'px';
+    frozenCanvas.width =W;
+    frozenCanvas.height=H;
+    frozenCanvas.style.width =window.innerWidth+'px';
     frozenCanvas.style.height=window.innerHeight+'px';
-    frozenCtx.setTransform(dr,0,0,dr,0,0);
-    frozenCtx.drawImage(video,0,0,window.innerWidth,window.innerHeight);
-
-    isFrozen = true;
-    overlayOn = true;
+    frozenCtx.drawImage(video, dx, dy, dw, dh);
+    isFrozen=true; overlayOn=true;
     btnOverlay.classList.add('on');
-    frozenCanvas.style.display ='block';
-    frozenBtns.style.display   ='flex';
-    shutterRow.style.display   ='none';
-    // restore flip and capsule for adjustment
-    btnFlip.style.opacity      ='1';
+    frozenCanvas.style.display='block';
+    frozenBtns.style.display  ='flex';
+    shutterRow.style.display  ='none';
+    btnFlip.style.opacity     ='1';
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
