@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+<meta name="apple-mobile-web-app-title" content="Contourxx">
+<title>Contourxx</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
+html, body { width:100%; height:100%; background:#000; overflow:hidden; font-family:-apple-system,'Helvetica Neue',sans-serif; }
+
+video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-index:1; }
+#frozen-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; display:none; }
+#canvas { position:fixed; inset:0; width:100%; height:100%; z-index:3; touch-action:none; }
+
+/* ── Pallet capsule ── */
+#pallet-capsule {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 86px);
+  left:50%; transform:translateX(-50%);
+  z-index:10; display:none;
+  background:rgba(0,0,0,0.45);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-radius:50px;
+  border:0.5px solid rgba(255,255,255,0.15);
+  height:34px;
+  align-items:center;
+  gap:0; padding:0 8px;
+  width:160px;
+  flex-direction:row;
+  touch-action:manipulation;
+  pointer-events:none;
+}
+.pallet-arrow {
+  width:32px; height:34px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:400;
+  color:rgba(255,255,255,0.6);
+  cursor:pointer; flex-shrink:0;
+  background:transparent; border:none;
+  -webkit-appearance:none;
+  touch-action:manipulation;
+  pointer-events:auto;
+}
+.pallet-arrow.disabled { color:rgba(255,255,255,0.15); pointer-events:none; }
+.pallet-arrow:active { color:#fff; }
+#pallet-label {
+  flex:1; font-size:13px; font-weight:700;
+  color:#fff; white-space:nowrap;
+  text-align:center;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+  pointer-events:none;
+}
+
+/* ── Shutter row ── */
+#shutter-row {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+  left:0; right:0;
+  z-index:10; display:none;
+  align-items:center; justify-content:center;
+}
+
+#btn-capture {
+  width:62px; height:62px; border-radius:50%;
+  background:transparent; border:3px solid #fff;
+  cursor:pointer; -webkit-appearance:none;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; transition:transform 0.1s; flex-shrink:0;
+}
+#btn-capture::after {
+  content:''; width:52px; height:52px; border-radius:50%; background:#fff;
+  transition:transform 0.1s;
+}
+#btn-capture:active { transform:scale(0.93); }
+#btn-capture:active::after { transform:scale(0.88); }
+
+#btn-flip {
+  position:fixed; right:16px;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 25px);
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  display:none; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; color:#fff;
+  -webkit-appearance:none; z-index:10;
+}
+#btn-flip:active { background:rgba(255,255,255,0.15); }
+
+/* ── Top right buttons ── */
+#top-right {
+  position:fixed; right:16px;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  z-index:10; display:none;
+  flex-direction:column; gap:8px; align-items:flex-end;
+}
+.icon-btn {
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; font-size:18px; color:#fff;
+  -webkit-appearance:none;
+}
+.icon-btn.on { border-color:#00e5ff; color:#00e5ff; background:rgba(0,229,255,0.15); }
+.icon-btn:active { background:rgba(255,255,255,0.15); }
+
+/* ── Frozen frame UI ── */
+#frozen-btns {
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
+  left:0; right:0;
+  z-index:10; display:none;
+  align-items:center; justify-content:center; gap:20px;
+}
+.frozen-btn {
+  padding:13px 32px; border-radius:50px;
+  font-size:14px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none;
+  transition:background 0.15s;
+}
+#frozen-cancel {
+  border:1px solid rgba(255,255,255,0.2);
+  background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  color:rgba(255,255,255,0.7);
+}
+#frozen-save {
+  border:1.5px solid rgba(0,229,255,0.5);
+  background:rgba(0,229,255,0.15);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  color:#00e5ff;
+}
+#frozen-cancel:active { background:rgba(255,255,255,0.15); }
+#frozen-save:active   { background:rgba(0,229,255,0.3); }
+/* ── Grid toggle button ── */
+#btn-grid {
+  position:fixed; left:16px;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  z-index:10; display:none;
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px; color:rgba(255,255,255,0.5);
+  -webkit-appearance:none; touch-action:manipulation;
+}
+#btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
+#btn-grid:active { background:rgba(255,255,255,0.15); }
+
+/* ── Grid toggle button ── */
+#btn-grid {
+  position:fixed; left:16px;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  z-index:10; display:none;
+  width:44px; height:44px; border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid rgba(255,255,255,0.2);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  align-items:center; justify-content:center;
+  cursor:pointer; font-size:16px; color:rgba(255,255,255,0.5);
+  -webkit-appearance:none;
+}
+#btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
+#btn-grid:active { background:rgba(255,255,255,0.15); }
+
+/* ── Photo preview ── */
+#photo-preview {
+  position:fixed; inset:0; z-index:40;
+  background:rgba(0,0,0,0.88);
+  display:none; align-items:center; justify-content:center;
+  flex-direction:column; gap:14px;
+}
+#photo-preview img { max-width:92vw; max-height:78vh; border-radius:10px; box-shadow:0 0 40px rgba(0,0,0,0.8); }
+#photo-preview p { color:rgba(255,255,255,0.4); font-size:12px; }
+
+/* ── Start / Error ── */
+#screen-start {
+  position:fixed; inset:0; z-index:20; background:#000;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:24px; padding:32px;
+}
+#screen-start h1 { color:#fff; font-size:22px; font-weight:700; }
+.btn-main {
+  padding:15px 48px; border-radius:50px;
+  border:2px solid #00e5ff; background:rgba(0,229,255,0.12);
+  color:#00e5ff; font-size:16px; font-weight:700;
+  cursor:pointer; -webkit-appearance:none;
+}
+.btn-main:active { background:rgba(0,229,255,0.28); }
+#screen-err {
+  position:fixed; inset:0; z-index:20; background:#000;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px;
+  padding:32px; text-align:center;
+}
+#screen-err h2 { color:#ff5555; font-size:18px; }
+</style>
+</head>
+<body>
+
+<div id="screen-start">
+  <h1>Contourxx</h1>
+  <button class="btn-main" onclick="startCamera()">開啟相機</button>
+</div>
+<div id="screen-err">
+  <h2>⚠️ 無法開啟相機</h2>
+  <p id="err-detail" style="color:#555;font-size:12px;margin-top:8px;"></p>
+  <button class="btn-main" onclick="location.reload()">重試</button>
+</div>
+
+<div id="flash"></div>
+<div id="photo-preview" onclick="closePreview()">
+  <img id="preview-img" src="" alt="">
+  <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
+</div>
+
+<canvas id="frozen-canvas"></canvas>
+
+<div id="frozen-btns">
+  <button class="frozen-btn" id="frozen-cancel" onclick="cancelFrozen()">取消</button>
+  <button class="frozen-btn" id="frozen-save"   onclick="saveFrozen()">儲存</button>
+</div>
+
+<video id="video" autoplay playsinline muted webkit-playsinline></video>
+<canvas id="canvas"></canvas>
+
+<button id="btn-grid" onclick="toggleGrid()">⊞</button>
+
+<div id="top-right">
+  <button class="icon-btn on" id="btn-overlay" onclick="toggleOverlay()">⊡</button>
+</div>
+
+<div id="pallet-capsule">
+  <button class="pallet-arrow" id="pallet-prev">‹</button>
+  <div id="pallet-label">N118</div>
+  <button class="pallet-arrow" id="pallet-next">›</button>
+</div>
+
+<div id="shutter-row">
+  <button id="btn-capture" onclick="capture()"></button>
+</div>
+<button id="btn-flip" onclick="flipContour()">⇄</button>
+
+<script>
+const video        = document.getElementById('video');
+const canvas       = document.getElementById('canvas');
+const ctx          = canvas.getContext('2d');
+const palletCapsule= document.getElementById('pallet-capsule');
+const shutterRow   = document.getElementById('shutter-row');
+const btnFlip      = document.getElementById('btn-flip');
+const topRight     = document.getElementById('top-right');
+const btnGrid      = document.getElementById('btn-grid');
+const btnOverlay   = document.getElementById('btn-overlay');
+const flash        = document.getElementById('flash');
+const photoPreview = document.getElementById('photo-preview');
+const previewImg   = document.getElementById('preview-img');
+
+const PALLETS = {
+  N118: { W:244, H:300, H_CORNER:190, W_TOP:120 },
+  P116: { W:244, H:295, H_CORNER:130, W_TOP:105 },
+  A116: { W:223, H:295, H_CORNER:185, W_TOP:105 },
+  L118: { W:498, H:300, H_CORNER:190, W_TOP:255 },
+  L116: { W:498, H:295, H_CORNER:130, W_TOP:220 },
+  Q7:   { W:244, H:300, H_CORNER:244, W_TOP:179 },
+  A1:   { W:317, H:244, H_CORNER:154, W_TOP:73  },
+  A2:   { W:317, H:244, H_CORNER:170, W_TOP:238 },
+  PRA:  { W:498, H:300, H_CORNER:244, W_TOP:368 },
+};
+const PALLET_KEYS = ['N118','P116','A116','L118','L116','Q7','A1','A2','PRA'];
+
+let pxPerCm    = window.innerHeight * 0.42 / 300; // default: J2 height fills ~42% screen
+let posX = 0, posY = 0;
+let flipped    = true;
+let currentKey = 'N118';
+let overlayOn  = true;
+let gridOn     = false;
+
+function toggleGrid() {
+  gridOn = !gridOn;
+  btnGrid.classList.toggle('on', gridOn);
+}
+
+function toggleOverlay() {
+  overlayOn = !overlayOn;
+  btnOverlay.classList.toggle('on', overlayOn);
+  btnFlip.style.opacity        = overlayOn ? '1' : '0.3';
+  btnFlip.style.pointerEvents  = overlayOn ? 'auto' : 'none';
+  palletCapsule.style.display  = overlayOn ? 'flex' : 'none';
+}
+
+const frozenCanvas = document.getElementById('frozen-canvas');
+const frozenBtns   = document.getElementById('frozen-btns');
+const frozenCtx    = frozenCanvas.getContext('2d');
+
+function dpr() { return window.devicePixelRatio || 1; }
+let isFrozen = false;
+
+const DUAL_CUT = new Set(['L118','L116','A1','A2','PRA']);
+
+// ── Pallet selector ──────────────────────────────────────────
+const palletLabel = document.getElementById('pallet-label');
+const palletPrev  = document.getElementById('pallet-prev');
+const palletNext  = document.getElementById('pallet-next');
+
+palletPrev.addEventListener('click', () => shiftPallet(-1));
+palletNext.addEventListener('click', () => shiftPallet(1));
+
+function buildScrollSelector() {
+  updatePalletUI();
+}
+
+function updatePalletUI() {
+  const idx = PALLET_KEYS.indexOf(currentKey);
+  palletLabel.textContent = currentKey;
+  palletPrev.classList.toggle('disabled', idx === 0);
+  palletNext.classList.toggle('disabled', idx === PALLET_KEYS.length - 1);
+}
+
+function shiftPallet(dir) {
+  const idx = PALLET_KEYS.indexOf(currentKey);
+  const next = idx + dir;
+  if (next < 0 || next >= PALLET_KEYS.length) return;
+  selectPallet(PALLET_KEYS[next]);
+}
+
+let savedPxPerCm = null; // saves single-cut scale
+
+function selectPallet(key) {
+  const wasDual = DUAL_CUT.has(currentKey);
+  const isDual  = DUAL_CUT.has(key);
+  currentKey = key;
+  updatePalletUI();
+
+  if (isDual) {
+    // always auto-fit for dual cut
+    if (!wasDual) savedPxPerCm = pxPerCm;
+    const p = PALLETS[key];
+    pxPerCm = Math.min(window.innerWidth*0.75/p.W, window.innerHeight*0.75/p.H);
+    posX = 0; posY = 0;
+  } else if (!isDual && wasDual) {
+    // switching back to single: restore saved scale
+    if (savedPxPerCm) pxPerCm = savedPxPerCm;
+    posX = 0; posY = 0;
+  }
+}
+
+
+
+function getPoly(key, flipped) {
+  const p = PALLETS[key];
+  const rCutH = (p.H - p.H_CORNER) / p.H;
+
+  if (DUAL_CUT.has(key)) {
+    // symmetric: both top corners cut
+    const rCutW = (p.W - p.W_TOP) / 2 / p.W; // each side
+    return [
+      [0,          1],           // bottom-left
+      [1,          1],           // bottom-right
+      [1,          rCutH],       // right side up to corner
+      [1-rCutW,    0],           // top-right
+      [rCutW,      0],           // top-left
+      [0,          rCutH],       // left side up to corner
+    ];
+  }
+
+  // single cut
+  const rCutW = (p.W - p.W_TOP) / p.W;
+  const poly = [[0,1],[1,1],[1,rCutH],[1-rCutW,0],[0,0]];
+  if (flipped) return poly.map(([rx,ry]) => [1-rx, ry]);
+  return poly;
+}
+
+function flipContour() { flipped = !flipped; }
+
+// ── Touch ────────────────────────────────────────────────────
+let touches  = {};
+let lastDist  = null;
+let lastMid   = null;
+let dragContour = false;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  Array.from(e.changedTouches).forEach(t =>
+    touches[t.identifier] = {x:t.clientX, y:t.clientY});
+  const ids = Object.keys(touches);
+  if (ids.length===2) {
+    lastDist = dist2(touches[ids[0]],touches[ids[1]]);
+    lastMid  = midPoint(touches[ids[0]],touches[ids[1]]);
+    dragContour=false;
+  } else { lastDist=null; lastMid=null; dragContour=true; }
+},{passive:false});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const prev={};
+  Object.keys(touches).forEach(k=>prev[k]={...touches[k]});
+  Array.from(e.changedTouches).forEach(t=>
+    touches[t.identifier]={x:t.clientX,y:t.clientY});
+  const ids=Object.keys(touches);
+  if (ids.length===2) {
+    const d   = dist2(touches[ids[0]],touches[ids[1]]);
+    const mid = midPoint(touches[ids[0]],touches[ids[1]]);
+    if (lastDist && lastMid) {
+      const W = window.innerWidth, H = window.innerHeight;
+      const p = PALLETS[currentKey];
+      // current box centre in screen coords
+      const cx = W/2 + posX*W;
+      const bottomY = H/2 + p.H*pxPerCm/2 + posY*H;
+      const cy = bottomY - p.H*pxPerCm/2;
+      // vector from box centre to pinch mid
+      const vx = mid.x - cx;
+      const vy = mid.y - cy;
+      // scale
+      const ratio = d / lastDist;
+      pxPerCm = Math.max(0.3, Math.min(8, pxPerCm * ratio));
+      // recompute box centre so pinch point stays fixed
+      const newPh = p.H * pxPerCm;
+      const newCx = mid.x - vx;
+      const newCy = mid.y - vy;
+      posX = Math.max(-0.4, Math.min(0.4, (newCx - W/2) / W));
+      posY = Math.max(-0.4, Math.min(0.4, (newCy - H/2) / H));
+    }
+    lastDist=d; lastMid=mid; dragContour=false;
+  } else if(ids.length===1&&dragContour){
+    const id=ids[0];
+    const dx=(touches[id].x-(prev[id]?.x||touches[id].x))/window.innerWidth;
+    const dy=(touches[id].y-(prev[id]?.y||touches[id].y))/window.innerHeight;
+    posX=Math.max(-0.4,Math.min(0.4,posX+dx));
+    posY=Math.max(-0.4,Math.min(0.4,posY+dy));
+  }
+},{passive:false});
+
+canvas.addEventListener('touchend', e=>{
+  e.preventDefault();
+  Array.from(e.changedTouches).forEach(t=>delete touches[t.identifier]);
+  if(Object.keys(touches).length<2){lastDist=null;lastMid=null;}
+},{passive:false});
+
+function dist2(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+function midPoint(a,b){return {x:(a.x+b.x)/2, y:(a.y+b.y)/2};}
+
+// ── Camera ───────────────────────────────────────────────────
+async function startCamera(){
+  const tries=[
+    {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false},
+    {video:{facingMode:'environment'},audio:false},
+    {video:true,audio:false}
+  ];
+  let stream=null;
+  for(const c of tries){
+    try{stream=await navigator.mediaDevices.getUserMedia(c);break;}
+    catch(e){if(c===tries[tries.length-1]){showErr(e);return;}}
+  }
+  video.srcObject=stream;
+  video.onloadedmetadata=()=>video.play().then(()=>{
+    document.getElementById('screen-start').style.display='none';
+    palletCapsule.style.display='flex';
+    shutterRow.style.display   ='flex';
+    btnFlip.style.display      ='flex';
+    btnFlip.style.opacity      ='1';
+    topRight.style.display     ='flex';
+    btnGrid.style.display      ='flex';
+    buildScrollSelector();
+    loop();
+  }).catch(showErr);
+}
+
+function showErr(e){
+  document.getElementById('screen-start').style.display='none';
+  document.getElementById('screen-err').style.display='flex';
+  document.getElementById('err-detail').textContent=(e?.name||'')+': '+(e?.message||'');
+}
+
+// ── Draw ─────────────────────────────────────────────────────
+function loop(){
+  const dr=dpr();
+  canvas.width =window.innerWidth *dr;
+  canvas.height=window.innerHeight*dr;
+  canvas.style.width =window.innerWidth +'px';
+  canvas.style.height=window.innerHeight+'px';
+  ctx.setTransform(dr,0,0,dr,0,0);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function draw(){
+  const W=window.innerWidth, H=window.innerHeight;
+  ctx.clearRect(0,0,W,H);
+
+  if (gridOn) drawGrid();
+
+  if (!overlayOn) return;
+
+  // when frozen, video is hidden behind frozen-canvas
+  const p=PALLETS[currentKey];
+  const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
+  const ph=p.H*pxPerCm, pw=p.W*pxPerCm;
+  const cx=W/2+posX*W;
+  const bottomY=H/2+ph/2+posY*H; // centred by default
+  const by=bottomY-ph, bx=cx-pw/2;
+  const poly=getPoly(currentKey,flipped);
+  const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
+
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  ctx.closePath();
+  ctx.fillStyle='rgba(0,229,255,0.07)';ctx.fill();
+
+  ctx.beginPath();
+  pts.forEach(([x,y],i)=>i===0?ctx.moveTo(x,y):ctx.lineTo(x,y));
+  ctx.closePath();
+  ctx.strokeStyle='#00e5ff';ctx.lineWidth=3;
+  ctx.setLineDash([14,9]);ctx.stroke();ctx.setLineDash([]);
+
+  pts.forEach(([x,y])=>{
+    ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
+    ctx.fillStyle='#00e5ff';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  const shortTopY = by+(CUT_H/p.H)*ph;
+  const shortMidY = (shortTopY+by+ph)/2;
+
+  if (DUAL_CUT.has(currentKey)) {
+    // dual cut: only show H_CORNER on left, no total height
+    lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
+  } else {
+    const cutSideX  = flipped?bx-14:bx+pw+14;
+    const cutAlign  = flipped?'right':'left';
+    lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
+    const straightX     = flipped?bx+pw+14:bx-14;
+    const straightAlign = flipped?'left':'right';
+    lbl(straightX, by+ph/2, p.H+' cm', straightAlign);
+  }
+  lbl(cx,by+ph+18,p.W+' cm','center');
+  const topX1 = DUAL_CUT.has(currentKey) ? bx+(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+(CUT_W/p.W)*pw:bx);
+  const topX2 = DUAL_CUT.has(currentKey) ? bx+pw-(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+pw:bx+(1-CUT_W/p.W)*pw);
+  lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
+
+}
+
+function lbl(x,y,text,align){
+  ctx.save();
+  ctx.font='bold 13px -apple-system,sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.8)';
+  ctx.textAlign=align;ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=8;
+  ctx.fillText(text,x,y);
+  ctx.restore();
+}
+
+function drawGrid(){
+  const W=window.innerWidth, H=window.innerHeight;
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,255,0.4)';
+  ctx.lineWidth=0.8;
+  // vertical lines at 1/3 and 2/3
+  [1/3, 2/3].forEach(f => {
+    ctx.beginPath();
+    ctx.moveTo(W*f, 0);
+    ctx.lineTo(W*f, H);
+    ctx.stroke();
+  });
+  // horizontal lines at 1/3 and 2/3
+  [1/3, 2/3].forEach(f => {
+    ctx.beginPath();
+    ctx.moveTo(0, H*f);
+    ctx.lineTo(W, H*f);
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// ── Capture ──────────────────────────────────────────────────
+function capture(){
+  flash.style.opacity='1';
+  setTimeout(()=>flash.style.opacity='0',120);
+
+  const dr=dpr();
+  const W=window.innerWidth*dr, H=window.innerHeight*dr;
+
+  // object-fit: cover calculation
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const scale=Math.max(W/vw, H/vh);
+  const dw=vw*scale, dh=vh*scale;
+  const dx=(W-dw)/2, dy=(H-dh)/2;
+
+  if (overlayOn) {
+    const comp=document.createElement('canvas');
+    comp.width=W; comp.height=H;
+    const c=comp.getContext('2d');
+    c.drawImage(video, dx, dy, dw, dh);
+    c.drawImage(canvas, 0, 0, W, H);
+    previewImg.src=comp.toDataURL('image/jpeg',0.92);
+    photoPreview.style.display='flex';
+  } else {
+    frozenCanvas.width =W;
+    frozenCanvas.height=H;
+    frozenCanvas.style.width =window.innerWidth+'px';
+    frozenCanvas.style.height=window.innerHeight+'px';
+    frozenCtx.drawImage(video, dx, dy, dw, dh);
+    isFrozen=true; overlayOn=true;
+    btnOverlay.classList.add('on');
+    frozenCanvas.style.display='block';
+    frozenBtns.style.display  ='flex';
+    shutterRow.style.display  ='none';
+    btnFlip.style.opacity     ='1';
+    btnFlip.style.pointerEvents='auto';
+    palletCapsule.style.display='flex';
+  }
+}
+
+function cancelFrozen(){
+  isFrozen = false;
+  frozenCanvas.style.display ='none';
+  frozenBtns.style.display   ='none';
+  overlayOn = false;
+  btnOverlay.classList.remove('on');
+  btnFlip.style.opacity      ='0.3';
+  btnFlip.style.pointerEvents='none';
+  palletCapsule.style.display='none';
+  shutterRow.style.display   ='flex';
+}
+
+function saveFrozen(){
+  // composite frozen frame + overlay
+  const dr=dpr();
+  const W=window.innerWidth*dr, H=window.innerHeight*dr;
+  const comp=document.createElement('canvas');
+  comp.width=W; comp.height=H;
+  const c=comp.getContext('2d');
+  c.drawImage(frozenCanvas,0,0,W,H);
+  c.drawImage(canvas,0,0,W,H);
+  previewImg.src=comp.toDataURL('image/jpeg',0.92);
+  cancelFrozen();
+  photoPreview.style.display='flex';
+}
+
+function closePreview(){photoPreview.style.display='none';}
+</script>
+</body>
+</html>
