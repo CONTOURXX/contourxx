@@ -15,6 +15,12 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #frozen-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; display:none; }
 #canvas { position:fixed; inset:0; width:100%; height:100%; z-index:3; touch-action:none; }
 
+/* ── Flash Effect (已補上) ── */
+#flash {
+  position:fixed; inset:0; z-index:30; background:#fff;
+  opacity:0; pointer-events:none; transition:opacity 0.12s ease-out;
+}
+
 /* ── Pallet capsule ── */
 #pallet-capsule {
   position:fixed;
@@ -139,21 +145,6 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 }
 #frozen-cancel:active { background:rgba(255,255,255,0.15); }
 #frozen-save:active   { background:rgba(0,229,255,0.3); }
-/* ── Grid toggle button ── */
-#btn-grid {
-  position:fixed; left:16px;
-  top:calc(env(safe-area-inset-top,0px) + 10px);
-  z-index:10; display:none;
-  width:44px; height:44px; border-radius:12px;
-  background:rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.2);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  align-items:center; justify-content:center;
-  cursor:pointer; font-size:16px; color:rgba(255,255,255,0.5);
-  -webkit-appearance:none; touch-action:manipulation;
-}
-#btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
-#btn-grid:active { background:rgba(255,255,255,0.15); }
 
 /* ── Grid toggle button ── */
 #btn-grid {
@@ -166,7 +157,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
   backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
   align-items:center; justify-content:center;
   cursor:pointer; font-size:16px; color:rgba(255,255,255,0.5);
-  -webkit-appearance:none;
+  -webkit-appearance:none; touch-action:manipulation;
 }
 #btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
 #btn-grid:active { background:rgba(255,255,255,0.15); }
@@ -219,7 +210,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 <div id="flash"></div>
 <div id="photo-preview" onclick="closePreview()">
   <img id="preview-img" src="" alt="">
-  <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
+  <p>長按圖片可儲存到相簿 點擊任意處關閉</p>
 </div>
 
 <canvas id="frozen-canvas"></canvas>
@@ -276,7 +267,7 @@ const PALLETS = {
 };
 const PALLET_KEYS = ['N118','P116','A116','L118','L116','Q7','A1','A2','PRA'];
 
-let pxPerCm    = window.innerHeight * 0.42 / 300; // default: J2 height fills ~42% screen
+let pxPerCm    = window.innerHeight * 0.42 / 300; // default: H fills ~42% screen
 let posX = 0, posY = 0;
 let flipped    = true;
 let currentKey = 'N118';
@@ -340,38 +331,32 @@ function selectPallet(key) {
   updatePalletUI();
 
   if (isDual) {
-    // always auto-fit for dual cut
     if (!wasDual) savedPxPerCm = pxPerCm;
     const p = PALLETS[key];
     pxPerCm = Math.min(window.innerWidth*0.75/p.W, window.innerHeight*0.75/p.H);
     posX = 0; posY = 0;
   } else if (!isDual && wasDual) {
-    // switching back to single: restore saved scale
     if (savedPxPerCm) pxPerCm = savedPxPerCm;
     posX = 0; posY = 0;
   }
 }
-
-
 
 function getPoly(key, flipped) {
   const p = PALLETS[key];
   const rCutH = (p.H - p.H_CORNER) / p.H;
 
   if (DUAL_CUT.has(key)) {
-    // symmetric: both top corners cut
-    const rCutW = (p.W - p.W_TOP) / 2 / p.W; // each side
+    const rCutW = (p.W - p.W_TOP) / 2 / p.W;
     return [
-      [0,          1],           // bottom-left
-      [1,          1],           // bottom-right
-      [1,          rCutH],       // right side up to corner
-      [1-rCutW,    0],           // top-right
-      [rCutW,      0],           // top-left
-      [0,          rCutH],       // left side up to corner
+      [0,          1],        // bottom-left
+      [1,          1],        // bottom-right
+      [1,          rCutH],    // right side up to corner
+      [1-rCutW,    0],        // top-right
+      [rCutW,      0],        // top-left
+      [0,          rCutH],    // left side up to corner
     ];
   }
 
-  // single cut
   const rCutW = (p.W - p.W_TOP) / p.W;
   const poly = [[0,1],[1,1],[1,rCutH],[1-rCutW,0],[0,0]];
   if (flipped) return poly.map(([rx,ry]) => [1-rx, ry]);
@@ -381,7 +366,7 @@ function getPoly(key, flipped) {
 function flipContour() { flipped = !flipped; }
 
 // ── Touch ────────────────────────────────────────────────────
-let touches  = {};
+let touches   = {};
 let lastDist  = null;
 let lastMid   = null;
 let dragContour = false;
@@ -411,18 +396,13 @@ canvas.addEventListener('touchmove', e => {
     if (lastDist && lastMid) {
       const W = window.innerWidth, H = window.innerHeight;
       const p = PALLETS[currentKey];
-      // current box centre in screen coords
       const cx = W/2 + posX*W;
       const bottomY = H/2 + p.H*pxPerCm/2 + posY*H;
       const cy = bottomY - p.H*pxPerCm/2;
-      // vector from box centre to pinch mid
       const vx = mid.x - cx;
       const vy = mid.y - cy;
-      // scale
       const ratio = d / lastDist;
       pxPerCm = Math.max(0.3, Math.min(8, pxPerCm * ratio));
-      // recompute box centre so pinch point stays fixed
-      const newPh = p.H * pxPerCm;
       const newCx = mid.x - vx;
       const newCy = mid.y - vy;
       posX = Math.max(-0.4, Math.min(0.4, (newCx - W/2) / W));
@@ -499,12 +479,11 @@ function draw(){
 
   if (!overlayOn) return;
 
-  // when frozen, video is hidden behind frozen-canvas
   const p=PALLETS[currentKey];
   const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
   const ph=p.H*pxPerCm, pw=p.W*pxPerCm;
   const cx=W/2+posX*W;
-  const bottomY=H/2+ph/2+posY*H; // centred by default
+  const bottomY=H/2+ph/2+posY*H;
   const by=bottomY-ph, bx=cx-pw/2;
   const poly=getPoly(currentKey,flipped);
   const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
@@ -530,11 +509,12 @@ function draw(){
   const shortMidY = (shortTopY+by+ph)/2;
 
   if (DUAL_CUT.has(currentKey)) {
-    // dual cut: only show H_CORNER on left, no total height
     lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
+    lbl(bx+pw+14, shortMidY, p.H_CORNER+' cm', 'left');
+    lbl(bx-14, by+ph/2, p.H+' cm', 'right');
   } else {
-    const cutSideX  = flipped?bx-14:bx+pw+14;
-    const cutAlign  = flipped?'right':'left';
+    const cutSideX   = flipped?bx-14:bx+pw+14;
+    const cutAlign   = flipped?'right':'left';
     lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
     const straightX     = flipped?bx+pw+14:bx-14;
     const straightAlign = flipped?'left':'right';
@@ -544,7 +524,6 @@ function draw(){
   const topX1 = DUAL_CUT.has(currentKey) ? bx+(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+(CUT_W/p.W)*pw:bx);
   const topX2 = DUAL_CUT.has(currentKey) ? bx+pw-(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+pw:bx+(1-CUT_W/p.W)*pw);
   lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
-
 }
 
 function lbl(x,y,text,align){
@@ -562,14 +541,12 @@ function drawGrid(){
   ctx.save();
   ctx.strokeStyle='rgba(255,255,255,0.4)';
   ctx.lineWidth=0.8;
-  // vertical lines at 1/3 and 2/3
   [1/3, 2/3].forEach(f => {
     ctx.beginPath();
     ctx.moveTo(W*f, 0);
     ctx.lineTo(W*f, H);
     ctx.stroke();
   });
-  // horizontal lines at 1/3 and 2/3
   [1/3, 2/3].forEach(f => {
     ctx.beginPath();
     ctx.moveTo(0, H*f);
@@ -587,7 +564,6 @@ function capture(){
   const dr=dpr();
   const W=window.innerWidth*dr, H=window.innerHeight*dr;
 
-  // object-fit: cover calculation
   const vw=video.videoWidth, vh=video.videoHeight;
   const scale=Math.max(W/vw, H/vh);
   const dw=vw*scale, dh=vh*scale;
@@ -612,7 +588,7 @@ function capture(){
     frozenCanvas.style.display='block';
     frozenBtns.style.display  ='flex';
     shutterRow.style.display  ='none';
-    btnFlip.style.opacity     ='1';
+    btnFlip.style.opacity      ='1';
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
@@ -631,7 +607,6 @@ function cancelFrozen(){
 }
 
 function saveFrozen(){
-  // composite frozen frame + overlay
   const dr=dpr();
   const W=window.innerWidth*dr, H=window.innerHeight*dr;
   const comp=document.createElement('canvas');
