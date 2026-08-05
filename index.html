@@ -15,6 +15,12 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #frozen-canvas { position:fixed; inset:0; width:100%; height:100%; z-index:2; display:none; }
 #canvas { position:fixed; inset:0; width:100%; height:100%; z-index:3; touch-action:none; }
 
+/* ── Flash ── */
+#flash {
+  position:fixed; inset:0; background:#fff; z-index:50;
+  opacity:0; pointer-events:none; transition:opacity 0.12s ease-out;
+}
+
 /* ── Pallet capsule ── */
 #pallet-capsule {
   position:fixed;
@@ -203,7 +209,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 <div id="flash"></div>
 <div id="photo-preview" onclick="closePreview()">
   <img id="preview-img" src="" alt="">
-  <p>長按圖片可儲存到相簿　點擊任意處關閉</p>
+  <p>長按圖片可儲存到相簿 點擊任意處關閉</p>
 </div>
 
 <canvas id="frozen-canvas"></canvas>
@@ -336,8 +342,6 @@ function selectPallet(key) {
   }
 }
 
-
-
 function getPoly(key, flipped) {
   const p = PALLETS[key];
   const rCutH = (p.H - p.H_CORNER) / p.H;
@@ -346,12 +350,12 @@ function getPoly(key, flipped) {
     // symmetric: both top corners cut
     const rCutW = (p.W - p.W_TOP) / 2 / p.W; // each side
     return [
-      [0,          1],           // bottom-left
-      [1,          1],           // bottom-right
-      [1,          rCutH],       // right side up to corner
+      [0,         1],           // bottom-left
+      [1,         1],           // bottom-right
+      [1,         rCutH],       // right side up to corner
       [1-rCutW,    0],           // top-right
       [rCutW,      0],           // top-left
-      [0,          rCutH],       // left side up to corner
+      [0,         rCutH],       // left side up to corner
     ];
   }
 
@@ -365,7 +369,7 @@ function getPoly(key, flipped) {
 function flipContour() { flipped = !flipped; }
 
 // ── Touch ────────────────────────────────────────────────────
-let touches  = {};
+let touches   = {};
 let lastDist  = null;
 let lastMid   = null;
 let dragContour = false;
@@ -534,8 +538,8 @@ function draw(){
     // dual cut: only show H_CORNER on left, no total height
     lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
   } else {
-    const cutSideX  = flipped?bx-14:bx+pw+14;
-    const cutAlign  = flipped?'right':'left';
+    const cutSideX   = flipped?bx-14:bx+pw+14;
+    const cutAlign   = flipped?'right':'left';
     lbl(cutSideX, shortMidY, p.H_CORNER+' cm', cutAlign);
     const straightX     = flipped?bx+pw+14:bx-14;
     const straightAlign = flipped?'left':'right';
@@ -594,6 +598,11 @@ function capture(){
   const dw=vw*scale, dh=vh*scale;
   const dx=(W-dw)/2, dy=(H-dh)/2;
 
+  // 合成前暫時關閉格線並重新繪製
+  const prevGridState = gridOn;
+  gridOn = false;
+  draw();
+
   if (overlayOn) {
     const comp=document.createElement('canvas');
     comp.width=W; comp.height=H;
@@ -613,10 +622,13 @@ function capture(){
     frozenCanvas.style.display='block';
     frozenBtns.style.display  ='flex';
     shutterRow.style.display  ='none';
-    btnFlip.style.opacity     ='1';
+    btnFlip.style.opacity      ='1';
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
+
+  // 照片合成完後還原格線設定
+  gridOn = prevGridState;
 }
 
 function cancelFrozen(){
@@ -632,6 +644,11 @@ function cancelFrozen(){
 }
 
 function saveFrozen(){
+  // 儲存前暫時關閉格線並重新繪製
+  const prevGridState = gridOn;
+  gridOn = false;
+  draw();
+
   // composite frozen frame + overlay
   const dr=dpr();
   const W=window.innerWidth*dr, H=window.innerHeight*dr;
@@ -641,6 +658,10 @@ function saveFrozen(){
   c.drawImage(frozenCanvas,0,0,W,H);
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
+
+  // 還原格線設定
+  gridOn = prevGridState;
+
   cancelFrozen();
   photoPreview.style.display='flex';
 }
