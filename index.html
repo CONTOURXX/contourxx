@@ -500,7 +500,8 @@ function draw(){
   const W=window.innerWidth, H=window.innerHeight;
   ctx.clearRect(0,0,W,H);
 
-  if (gridOn) drawGrid();
+  // 凍結狀態下暫時不畫格線
+  if (gridOn && !isFrozen) drawGrid();
 
   if (!overlayOn) return;
 
@@ -598,12 +599,10 @@ function capture(){
   const dw=vw*scale, dh=vh*scale;
   const dx=(W-dw)/2, dy=(H-dh)/2;
 
-  // 紀錄原本的格線狀態
-  const originalGridState = gridOn;
-
   if (overlayOn) {
     // ── 情境 A：開啟輪廓框 ──
     // 拍照前暫時把格線關閉並重新繪製 canvas，確保合成的照片不帶格線
+    const prevGrid = gridOn;
     gridOn = false;
     draw();
 
@@ -615,34 +614,28 @@ function capture(){
     previewImg.src=comp.toDataURL('image/jpeg',0.92);
     photoPreview.style.display='flex';
 
-    // 拍完照後，立刻還原相機畫面上的格線與繪製
-    gridOn = originalGridState;
+    // 拍完照後還原格線
+    gridOn = prevGrid;
     draw();
 
   } else {
     // ── 情境 B：關閉輪廓框 ──
-    // 按下快門後，自動關閉格線並更新按鈕狀態
-    gridOn = false;
-    btnGrid.classList.remove('on');
-    draw(); // 重新繪製以清除格線
-
+    // 進入凍結狀態，凍結畫面上不顯示格線，但保持 gridOn 變數與按鈕狀態不變
     frozenCanvas.width =W;
     frozenCanvas.height=H;
     frozenCanvas.style.width =window.innerWidth+'px';
     frozenCanvas.style.height=window.innerHeight+'px';
     frozenCtx.drawImage(video, dx, dy, dw, dh);
-    isFrozen=true; overlayOn=true;
+    isFrozen=true; 
+    overlayOn=true;
     btnOverlay.classList.add('on');
     frozenCanvas.style.display='block';
     frozenBtns.style.display  ='flex';
-    shutterRow.style.display  ='none';
+    shutterRow.style.display   ='none';
     btnFlip.style.opacity      ='1';
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
-
-  // 照片合成完後還原格線設定
-  gridOn = prevGridState;
 }
 
 function cancelFrozen(){
@@ -655,11 +648,12 @@ function cancelFrozen(){
   btnFlip.style.pointerEvents='none';
   palletCapsule.style.display='none';
   shutterRow.style.display   ='flex';
+  draw(); // 恢復即時相機畫面並重繪格線
 }
 
 function saveFrozen(){
-  // 儲存前暫時關閉格線並重新繪製
-  const prevGridState = gridOn;
+  // 儲存前暫時關閉格線並重新繪製輪廓框
+  const prevGrid = gridOn;
   gridOn = false;
   draw();
 
@@ -673,8 +667,8 @@ function saveFrozen(){
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
 
-  // 還原格線設定並重新繪製
-  gridOn = prevGridState;
+  // 還原格線設定
+  gridOn = prevGrid;
 
   cancelFrozen();
   photoPreview.style.display='flex';
