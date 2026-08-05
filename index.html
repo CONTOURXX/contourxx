@@ -155,22 +155,6 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 #btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
 #btn-grid:active { background:rgba(255,255,255,0.15); }
 
-/* ── Grid toggle button ── */
-#btn-grid {
-  position:fixed; left:16px;
-  top:calc(env(safe-area-inset-top,0px) + 10px);
-  z-index:10; display:none;
-  width:44px; height:44px; border-radius:12px;
-  background:rgba(0,0,0,0.5);
-  border:1px solid rgba(255,255,255,0.2);
-  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-  align-items:center; justify-content:center;
-  cursor:pointer; font-size:16px; color:rgba(255,255,255,0.5);
-  -webkit-appearance:none;
-}
-#btn-grid.on { border-color:rgba(255,255,255,0.6); color:#fff; }
-#btn-grid:active { background:rgba(255,255,255,0.15); }
-
 /* ── Photo preview ── */
 #photo-preview {
   position:fixed; inset:0; z-index:40;
@@ -184,7 +168,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 /* ── Start / Error ── */
 #screen-start {
   position:fixed; inset:0; z-index:20; background:#000;
-  display:flex; flex-direction:column;
+  display:none; flex-direction:column;
   align-items:center; justify-content:center; gap:24px; padding:32px;
 }
 #screen-start h1 { color:#fff; font-size:22px; font-weight:700; }
@@ -208,7 +192,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 
 <div id="screen-start">
   <h1>Contourxx</h1>
-  <button class="btn-main" onclick="startCamera()">開啟相機</button>
+  <button class="btn-main" onclick="startCamera(true)">開啟相機</button>
 </div>
 <div id="screen-err">
   <h2>⚠️ 無法開啟相機</h2>
@@ -448,7 +432,7 @@ function dist2(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 function midPoint(a,b){return {x:(a.x+b.x)/2, y:(a.y+b.y)/2};}
 
 // ── Camera ───────────────────────────────────────────────────
-async function startCamera(){
+async function startCamera(isUserClick = false){
   const tries=[
     {video:{facingMode:{exact:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false},
     {video:{facingMode:'environment'},audio:false},
@@ -457,7 +441,18 @@ async function startCamera(){
   let stream=null;
   for(const c of tries){
     try{stream=await navigator.mediaDevices.getUserMedia(c);break;}
-    catch(e){if(c===tries[tries.length-1]){showErr(e);return;}}
+    catch(e){
+      if(c===tries[tries.length-1]){
+        if(!isUserClick){
+          // 自動嘗試失敗時，退回顯示開啟按鈕，讓使用者手動觸發
+          document.getElementById('screen-start').style.display='flex';
+        } else {
+          // 手動點擊仍失敗，才顯示錯誤畫面
+          showErr(e);
+        }
+        return;
+      }
+    }
   }
   video.srcObject=stream;
   video.onloadedmetadata=()=>video.play().then(()=>{
@@ -470,7 +465,13 @@ async function startCamera(){
     btnGrid.style.display      ='flex';
     buildScrollSelector();
     loop();
-  }).catch(showErr);
+  }).catch(e => {
+    if(!isUserClick){
+      document.getElementById('screen-start').style.display='flex';
+    } else {
+      showErr(e);
+    }
+  });
 }
 
 function showErr(e){
@@ -645,6 +646,11 @@ function saveFrozen(){
 }
 
 function closePreview(){photoPreview.style.display='none';}
+
+// ── 初始化：自動嘗試開啟相機 ─────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  startCamera(false);
+});
 </script>
 </body>
 </html>
