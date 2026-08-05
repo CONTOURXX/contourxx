@@ -497,20 +497,13 @@ function loop(){
   requestAnimationFrame(loop);
 }
 
-function draw(){
+function drawContourOnly() {
   const W=window.innerWidth, H=window.innerHeight;
-  ctx.clearRect(0,0,W,H);
-
-  if (gridOn) drawGrid();
-
-  if (!overlayOn) return;
-
-  // when frozen, video is hidden behind frozen-canvas
   const p=PALLETS[currentKey];
   const CUT_W=p.W-p.W_TOP, CUT_H=p.H-p.H_CORNER;
   const ph=p.H*pxPerCm, pw=p.W*pxPerCm;
   const cx=W/2+posX*W;
-  const bottomY=H/2+ph/2+posY*H; // centred by default
+  const bottomY=H/2+ph/2+posY*H;
   const by=bottomY-ph, bx=cx-pw/2;
   const poly=getPoly(currentKey,flipped);
   const pts=poly.map(([rx,ry])=>[bx+rx*pw,by+ry*ph]);
@@ -536,7 +529,6 @@ function draw(){
   const shortMidY = (shortTopY+by+ph)/2;
 
   if (DUAL_CUT.has(currentKey)) {
-    // dual cut: only show H_CORNER on left, no total height
     lbl(bx-14, shortMidY, p.H_CORNER+' cm', 'right');
   } else {
     const cutSideX   = flipped?bx-14:bx+pw+14;
@@ -550,7 +542,14 @@ function draw(){
   const topX1 = DUAL_CUT.has(currentKey) ? bx+(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+(CUT_W/p.W)*pw:bx);
   const topX2 = DUAL_CUT.has(currentKey) ? bx+pw-(((p.W-p.W_TOP)/2)/p.W)*pw : (flipped?bx+pw:bx+(1-CUT_W/p.W)*pw);
   lbl((topX1+topX2)/2,by-14,p.W_TOP+' cm','center');
+}
 
+function draw(){
+  const W=window.innerWidth, H=window.innerHeight;
+  ctx.clearRect(0,0,W,H);
+
+  if (gridOn) drawGrid();
+  if (overlayOn) drawContourOnly();
 }
 
 function lbl(x,y,text,align){
@@ -599,18 +598,11 @@ function capture(){
   const dw=vw*scale, dh=vh*scale;
   const dx=(W-dw)/2, dy=(H-dh)/2;
 
-  // 合成前暫時關閉格線並重新繪製
-  const prevGridState = gridOn;
-
-  if (!overlayOn) {
-    gridOn = false;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  } else {
-    gridOn = false;
-    draw();
-  }
+  // 清空主 canvas 並重新準備合成畫面的圖層
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
   if (overlayOn) {
+    drawContourOnly(); // 只畫輪廓，不畫格線
     const comp=document.createElement('canvas');
     comp.width=W; comp.height=H;
     const c=comp.getContext('2d');
@@ -633,9 +625,6 @@ function capture(){
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
-
-  // 照片合成完後還原格線設定
-  gridOn = prevGridState;
 }
 
 function cancelFrozen(){
@@ -651,12 +640,9 @@ function cancelFrozen(){
 }
 
 function saveFrozen(){
-  // 儲存前暫時關閉格線並重新繪製
-  const prevGridState = gridOn;
-  gridOn = false;
-  draw();
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  drawContourOnly(); // 儲存凍結照片時只畫輪廓
 
-  // composite frozen frame + overlay
   const dr=dpr();
   const W=window.innerWidth*dr, H=window.innerHeight*dr;
   const comp=document.createElement('canvas');
@@ -665,9 +651,6 @@ function saveFrozen(){
   c.drawImage(frozenCanvas,0,0,W,H);
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
-
-  // 還原格線設定
-  gridOn = prevGridState;
 
   cancelFrozen();
   photoPreview.style.display='flex';
