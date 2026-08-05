@@ -145,6 +145,7 @@ video { position:fixed; inset:0; width:100%; height:100%; object-fit:cover; z-in
 }
 #frozen-cancel:active { background:rgba(255,255,255,0.15); }
 #frozen-save:active   { background:rgba(0,229,255,0.3); }
+
 /* ── Grid toggle button ── */
 #btn-grid {
   position:fixed; left:16px;
@@ -600,8 +601,14 @@ function capture(){
 
   // 合成前暫時關閉格線並重新繪製
   const prevGridState = gridOn;
-  gridOn = false;
-  draw();
+
+  if (!overlayOn) {
+    gridOn = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  } else {
+    gridOn = false;
+    draw();
+  }
 
   if (overlayOn) {
     const comp=document.createElement('canvas');
