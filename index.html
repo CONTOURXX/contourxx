@@ -598,12 +598,15 @@ function capture(){
   const dw=vw*scale, dh=vh*scale;
   const dx=(W-dw)/2, dy=(H-dh)/2;
 
-  // 合成前暫時關閉格線並重新繪製
-  const prevGridState = gridOn;
-  gridOn = false;
-  draw();
+  // 紀錄原本的格線狀態
+  const originalGridState = gridOn;
 
   if (overlayOn) {
+    // ── 情境 A：開啟輪廓框 ──
+    // 拍照前暫時把格線關閉並重新繪製 canvas，確保合成的照片不帶格線
+    gridOn = false;
+    draw();
+
     const comp=document.createElement('canvas');
     comp.width=W; comp.height=H;
     const c=comp.getContext('2d');
@@ -611,7 +614,18 @@ function capture(){
     c.drawImage(canvas, 0, 0, W, H);
     previewImg.src=comp.toDataURL('image/jpeg',0.92);
     photoPreview.style.display='flex';
+
+    // 拍完照後，立刻還原相機畫面上的格線與繪製
+    gridOn = originalGridState;
+    draw();
+
   } else {
+    // ── 情境 B：關閉輪廓框 ──
+    // 按下快門後，自動關閉格線並更新按鈕狀態
+    gridOn = false;
+    btnGrid.classList.remove('on');
+    draw(); // 重新繪製以清除格線
+
     frozenCanvas.width =W;
     frozenCanvas.height=H;
     frozenCanvas.style.width =window.innerWidth+'px';
