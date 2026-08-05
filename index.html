@@ -673,7 +673,7 @@ function saveFrozen(){
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
 
-  // 還原格線設定
+  // 還原格線設定並重新繪製
   gridOn = prevGridState;
 
   cancelFrozen();
