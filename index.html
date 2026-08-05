@@ -273,6 +273,7 @@ let flipped    = true;
 let currentKey = 'N118';
 let overlayOn  = true;
 let gridOn     = false;
+let isCapturing = false;
 
 function toggleGrid() {
   gridOn = !gridOn;
@@ -548,7 +549,7 @@ function draw(){
   const W=window.innerWidth, H=window.innerHeight;
   ctx.clearRect(0,0,W,H);
 
-  if (gridOn) drawGrid();
+  if (gridOn && !isCapturing) drawGrid();
   if (overlayOn) drawContourOnly();
 }
 
@@ -598,11 +599,10 @@ function capture(){
   const dw=vw*scale, dh=vh*scale;
   const dx=(W-dw)/2, dy=(H-dh)/2;
 
-  // 清空主 canvas 並重新準備合成畫面的圖層
-  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  isCapturing = true;
+  draw();
 
   if (overlayOn) {
-    drawContourOnly(); // 只畫輪廓，不畫格線
     const comp=document.createElement('canvas');
     comp.width=W; comp.height=H;
     const c=comp.getContext('2d');
@@ -625,6 +625,8 @@ function capture(){
     btnFlip.style.pointerEvents='auto';
     palletCapsule.style.display='flex';
   }
+
+  isCapturing = false;
 }
 
 function cancelFrozen(){
@@ -640,8 +642,8 @@ function cancelFrozen(){
 }
 
 function saveFrozen(){
-  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-  drawContourOnly(); // 儲存凍結照片時只畫輪廓
+  isCapturing = true;
+  draw();
 
   const dr=dpr();
   const W=window.innerWidth*dr, H=window.innerHeight*dr;
@@ -651,6 +653,8 @@ function saveFrozen(){
   c.drawImage(frozenCanvas,0,0,W,H);
   c.drawImage(canvas,0,0,W,H);
   previewImg.src=comp.toDataURL('image/jpeg',0.92);
+
+  isCapturing = false;
 
   cancelFrozen();
   photoPreview.style.display='flex';
